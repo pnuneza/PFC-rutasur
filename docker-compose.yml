@@ -1,0 +1,37 @@
+# ==========================================================
+# RutaSur v1.0 — entorno local de desarrollo
+# Base de datos PostgreSQL 16 + PostGIS 3.4 (misma versión que Neon)
+#
+#   docker compose up -d        → levanta la base (crea el esquema la 1.ª vez)
+#   docker compose ps           → estado (debe decir "healthy")
+#   docker compose down         → detiene (los datos se conservan)
+#   docker compose down -v      → detiene y BORRA los datos (vuelve a crear todo)
+# ==========================================================
+services:
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: rutasur-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rutasur}
+      POSTGRES_USER: ${POSTGRES_USER:-rutasur_owner}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina POSTGRES_PASSWORD en el archivo .env}
+      RUTASUR_APP_PASSWORD: ${RUTASUR_APP_PASSWORD:?Defina RUTASUR_APP_PASSWORD en el archivo .env}
+      RUTASUR_CARGAR_DEMO: ${RUTASUR_CARGAR_DEMO:-si}
+      TZ: UTC
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./database:/rutasur/database:ro
+      - ./database/respaldos:/rutasur/respaldos
+      # Reemplaza los scripts de inicio de la imagen por el de RutaSur
+      - ./database/docker-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  pgdata:

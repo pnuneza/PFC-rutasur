@@ -70,4 +70,25 @@ Versionado semántico `MAJOR.MINOR.PATCH`. La primera versión estable es `v1.0.
 
 ## Puesta en marcha
 
-_Se completará a medida que avance la implementación (base de datos → backend → apps)._
+### Requisitos
+
+- Docker Desktop
+- Git
+
+### 1. Base de datos
+
+```
+cp .env.example .env        # luego cambie las contraseñas en .env
+docker compose up -d        # crea la base con el esquema y datos demo
+docker compose ps           # debe aparecer "healthy"
+```
+
+En `database/README.md` están las pruebas, el respaldo y la trazabilidad con el diseño.
+
+### 2. Backend
+
+_Pendiente._
+
+### 3. Apps móviles
+
+_Pendiente._
