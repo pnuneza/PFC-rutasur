@@ -1,0 +1,74 @@
+# ==========================================================
+# RutaSur v1.0 — .gitignore del monorepo
+# (app Flutter + backend FastAPI + scripts de base de datos)
+# ==========================================================
+
+# ----- Sistema operativo / editores -----
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# ----- Secretos (NUNCA subir) -----
+.env
+.env.*
+!.env.example
+*.pem
+
+# ----- Flutter / Dart (app/) -----
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# ----- Android -----
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/key.properties
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/android/gradle/wrapper/gradle-wrapper.jar
+*.jks
+*.keystore
+
+# ----- iOS (por si se genera la carpeta) -----
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+
+# ----- Binarios generados (se publican en Releases, no en el repo) -----
+*.apk
+*.aab
+
+# ----- Python (backend/) -----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ----- Base de datos / Docker -----
+pgdata/
+database/data/
+*.dump
+*.backup
