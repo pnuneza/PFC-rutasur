@@ -1,0 +1,34 @@
+# ==========================================================
+# RutaSur v1.0 — normalización de saltos de línea
+# En el repositorio todo se guarda con LF; cada sistema
+# operativo lo adapta al hacer checkout.
+# ==========================================================
+
+# Detección automática de archivos de texto
+* text=auto eol=lf
+
+# Scripts que deben conservar LF (se ejecutan en Linux / CI)
+*.sh        text eol=lf
+gradlew     text eol=lf
+
+# Scripts propios de Windows
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# Binarios (no tocar)
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.pdf       binary
+*.jar       binary
+*.jks       binary
+*.keystore  binary
+*.apk       binary
+*.aab       binary
+*.ttf       binary
+*.otf       binary
+*.woff      binary
+*.woff2     binary
