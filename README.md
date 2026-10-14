@@ -32,6 +32,7 @@ rutasur/
 | Backend | Python + FastAPI |
 | Base de datos | PostgreSQL + PostGIS |
 | Control de versiones | Git + GitHub |
+| Calidad | Ruff, Bandit, pytest |
 | Integración continua | GitHub Actions |
 
 ## Estrategia de ramas (Git Flow)
@@ -87,7 +88,18 @@ En `database/README.md` están las pruebas, el respaldo y la trazabilidad con el
 
 ### 2. Backend
 
-_Pendiente._
+Requiere Python 3.12. En PowerShell:
+
+```
+cd backend
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+copy .env.example .env      # luego ponga la contraseña de rutasur_app
+uvicorn app.main:app --reload
+```
+
+La documentación interactiva de la API queda en http://localhost:8000/docs. En `backend/README.md` están el simulador de unidad y las herramientas de calidad.
 
 ### 3. Apps móviles
 
