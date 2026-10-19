@@ -101,6 +101,6 @@ uvicorn app.main:app --reload
 
 La documentación interactiva de la API queda en http://localhost:8000/docs. En `backend/README.md` están el simulador de unidad y las herramientas de calidad.
 
-### 3. Apps móviles
+### 3. App del pasajero (Flutter)
 
-_Pendiente._
+Requiere Flutter y un emulador de Android. Los pasos de la primera vez y de la demostración están en `app/README.md`.
