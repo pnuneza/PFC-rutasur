@@ -8,6 +8,7 @@
 #   1. calidad   → estilo (Ruff), formato y seguridad (Bandit)
 #   2. pruebas   → crea una base PostgreSQL + PostGIS limpia, aplica el
 #                  esquema, corre las 51 pruebas SQL y las pruebas del backend
+#   3. app       → análisis estático y pruebas de la app Flutter
 # ==========================================================
 name: CI
 
@@ -100,3 +101,26 @@ jobs:
       - name: Pruebas del backend (unitarias + integración) con cobertura
         working-directory: backend
         run: pytest --cov --cov-report=term-missing --cov-fail-under=85
+
+  app:
+    name: App Flutter (análisis + pruebas)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Análisis estático (flutter analyze)
+        run: flutter analyze --no-fatal-infos
+
+      - name: Pruebas unitarias y de widgets
+        run: flutter test
