@@ -1,6 +1,6 @@
 # Backend — RutaSur API
 
-Servicio en la nube de RutaSur v1.0: Python 3.12 + FastAPI 0.115 sobre PostgreSQL 16 + PostGIS 3.4.
+Servicio en la nube de RutaSur v1.0: Python 3.12 + FastAPI 0.142 sobre PostgreSQL 16 + PostGIS 3.4.
 
 ## Estructura (P05, Figura 21 y Tabla 32)
 
@@ -23,7 +23,7 @@ backend/
 │   ├── domain/               # Entidades, enumeraciones, excepciones y umbrales
 │   ├── repositories/         # Interfaces + implementaciones SQL — capa de datos
 │   ├── db/                   # Conexión
-│   └── herramientas/         # Simulador de unidad (demostración)
+│   └── herramientas/         # Simulador de unidad y verificación del despliegue
 └── tests/
     ├── unit/                 # Reglas de negocio con repositorios en memoria
     └── integration/          # API y servicios contra PostGIS real
@@ -81,3 +81,12 @@ pytest --cov                    # 91 pruebas, cobertura 96 %
 ```
 
 El detalle de los hallazgos y su corrección está en `docs/calidad/analisis-estatico.md`.
+
+## Despliegue en la nube
+
+La API se publica en Render y la base en Neon: vea [`docs/despliegue.md`](../docs/despliegue.md).
+Para comprobar un despliegue:
+
+```
+python -m app.herramientas.verificar_despliegue https://rutasur-api.onrender.com
+```

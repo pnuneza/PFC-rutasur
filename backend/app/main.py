@@ -5,6 +5,11 @@ Ejecutar en desarrollo:
 Documentación interactiva (contrato OpenAPI 3): http://localhost:8000/docs
 """
 
+import asyncio
+import contextlib
+import logging
+from collections.abc import AsyncIterator
+
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import RequestResponseEndpoint
@@ -13,6 +18,8 @@ from app import __version__
 from app.api.v1 import publica
 from app.core.config import obtener_configuracion
 from app.core.errores import registrar_manejadores
+from app.db.conexion import obtener_motor
+from app.db.depuracion import depurar_periodicamente
 
 DESCRIPCION = """
 API de **RutaSur v1.0**: seguimiento en tiempo real de los buses de la línea LB
@@ -38,9 +45,38 @@ RUTAS_DOCUMENTACION = ("/docs", "/openapi.json")
 HSTS = "max-age=31536000; includeSubDomains"
 
 
+def _configurar_registro() -> None:
+    """Los mensajes del servicio (logger «rutasur») salen en la consola, como los de uvicorn.
+
+    En Render es lo que se ve en la pestaña Logs.
+    """
+    registro = logging.getLogger("rutasur")
+    if not registro.handlers:
+        manejador = logging.StreamHandler()
+        manejador.setFormatter(logging.Formatter("%(levelname)s:     %(name)s — %(message)s"))
+        registro.addHandler(manejador)
+        registro.setLevel(logging.INFO)
+
+
+@contextlib.asynccontextmanager
+async def ciclo_de_vida(app: FastAPI) -> AsyncIterator[None]:
+    """Arranque y cierre del servicio: tareas en segundo plano (RN-012)."""
+    _configurar_registro()
+    config = obtener_configuracion()
+    tarea = None
+    if config.depurar_automaticamente:
+        tarea = asyncio.create_task(depurar_periodicamente(obtener_motor(), config.retencion_dias))
+    yield
+    if tarea is not None:
+        tarea.cancel()
+        with contextlib.suppress(asyncio.CancelledError):
+            await tarea
+
+
 def crear_app() -> FastAPI:
     config = obtener_configuracion()
     app = FastAPI(
+        lifespan=ciclo_de_vida,
         title="RutaSur API",
         version=__version__,
         description=DESCRIPCION,
@@ -57,7 +93,7 @@ def crear_app() -> FastAPI:
             allow_headers=["Authorization", "Content-Type"],
         )
 
-    produccion = config.entorno == "produccion"
+    produccion = config.es_produccion
 
     @app.middleware("http")
     async def agregar_cabeceras_seguridad(

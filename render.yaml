@@ -1,0 +1,36 @@
+# ==========================================================
+# RutaSur v1.0 — despliegue en Render (Blueprint)
+# Render lee este archivo al crear el servicio desde el repositorio.
+# Guía paso a paso: docs/despliegue.md
+# ==========================================================
+services:
+  - type: web
+    name: rutasur-api
+    runtime: python
+    plan: free
+    # La región no se puede cambiar después. Virginia queda junto a la base de Neon
+    # (AWS us-east-1): cada petición hace varias consultas y la distancia se nota.
+    region: virginia
+    rootDir: backend
+    # Solo la rama de versiones publicadas, y solo si la integración continua pasó
+    branch: main
+    autoDeployTrigger: checksPass
+    buildCommand: pip install .
+    # --proxy-headers: Render atiende el HTTPS y reenvía la petición al servicio
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips '*'
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: ENTORNO
+        value: produccion
+      # Conexión de Neon con el rol rutasur_app (NO el dueño). Se pega en Render al crear
+      # el servicio; nunca se escribe en el repositorio.
+      - key: DATABASE_URL
+        sync: false
+      # RN-012 con el límite de 1 GB de Neon gratuito: 14 días de historial
+      - key: RETENCION_DIAS
+        value: "14"
+      # El panel web (Módulo 6) agregará aquí su dominio
+      - key: CORS_ORIGENES
+        value: "[]"
