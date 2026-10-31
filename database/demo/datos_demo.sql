@@ -2,62 +2,14 @@
 -- RutaSur v1.0 — datos_demo.sql
 --
 -- ⚠ DATOS DE DEMOSTRACIÓN — SOLO PARA DESARROLLO Y PRUEBAS ⚠
--- Los trazados son líneas simplificadas y los paraderos son ficticios.
--- NO representan el recorrido real de la línea LB. Los datos reales
--- se cargan desde la ficha de coordenadas y los recorridos grabados
--- con GPS (P06, carga inicial).
+-- Unidades, cuentas y una sesión simulada. La ruta (trazados y paraderos)
+-- NO está aquí: es la real y se carga antes con
+-- database/datos_reales/ruta_lb.sql.
 --
 -- Contraseña de todas las cuentas demo: rutasur-demo
 -- ==========================================================
 
 BEGIN;
-
--- ----------------------------------------------------------
--- Paraderos (8): 4 del tramo común + 2 por ramal
--- ----------------------------------------------------------
-INSERT INTO paradero (codigo, nombre, referencia, ubicacion, en_tramo_comun) VALUES
-  ('stp_001', 'Centro (2 de Mayo)',     'Paradero inicial',         ST_SetSRID(ST_MakePoint(-71.5358, -16.4002), 4326), true),
-  ('stp_002', 'Avenida Demo 1',         'Frente al grifo',          ST_SetSRID(ST_MakePoint(-71.5202, -16.4178), 4326), true),
-  ('stp_003', 'Avenida Demo 2',         'Esquina del mercado',      ST_SetSRID(ST_MakePoint(-71.5048, -16.4402), 4326), true),
-  ('stp_004', 'Plaza Characato',        'Frente a la iglesia',      ST_SetSRID(ST_MakePoint(-71.4902, -16.4688), 4326), true),
-  ('stp_005', 'Mollebaya Demo 1',       'Frente a la posta',        ST_SetSRID(ST_MakePoint(-71.4801, -16.4798), 4326), false),
-  ('stp_006', 'Mollebaya (final)',      'Paradero final del ramal', ST_SetSRID(ST_MakePoint(-71.4702, -16.4918), 4326), false),
-  ('stp_007', 'Cerrillos Demo 1',       'Junto al colegio',         ST_SetSRID(ST_MakePoint(-71.4978, -16.4832), 4326), false),
-  ('stp_008', 'Cerrillos (final)',      'Paradero final del ramal', ST_SetSRID(ST_MakePoint(-71.5048, -16.4948), 4326), false);
-
-
--- ----------------------------------------------------------
--- Variantes (4): VUELTA = Centro → ramal · IDA = ramal → Centro
--- longitud_m la calcula el trigger trg_variante_longitud
--- ----------------------------------------------------------
-INSERT INTO variante (linea_id, ramal, sentido, destino, trazado)
-SELECT l.id, v.ramal::ramal_t, v.sentido::sentido_t, v.destino, ST_GeomFromText(v.wkt, 4326)
-  FROM linea l
- CROSS JOIN (VALUES
-   ('MOLLEBAYA', 'VUELTA', 'Mollebaya',
-    'LINESTRING(-71.5360 -16.4000, -71.5200 -16.4180, -71.5050 -16.4400, -71.4900 -16.4690, -71.4800 -16.4800, -71.4700 -16.4920)'),
-   ('MOLLEBAYA', 'IDA',    'Centro (2 de Mayo)',
-    'LINESTRING(-71.4700 -16.4920, -71.4800 -16.4800, -71.4900 -16.4690, -71.5050 -16.4400, -71.5200 -16.4180, -71.5360 -16.4000)'),
-   ('CERRILLO',  'VUELTA', 'Cerrillos',
-    'LINESTRING(-71.5360 -16.4000, -71.5200 -16.4180, -71.5050 -16.4400, -71.4900 -16.4690, -71.4980 -16.4830, -71.5050 -16.4950)'),
-   ('CERRILLO',  'IDA',    'Centro (2 de Mayo)',
-    'LINESTRING(-71.5050 -16.4950, -71.4980 -16.4830, -71.4900 -16.4690, -71.5050 -16.4400, -71.5200 -16.4180, -71.5360 -16.4000)')
- ) AS v(ramal, sentido, destino, wkt)
- WHERE l.codigo = 'LB';
-
-
--- ----------------------------------------------------------
--- Paraderos de cada variante: el orden y la distancia los calcula
--- fn_asignar_paraderos_variante a partir del trazado
--- ----------------------------------------------------------
-SELECT fn_asignar_paraderos_variante(v.id,
-         CASE v.ramal
-           WHEN 'MOLLEBAYA' THEN ARRAY['stp_001','stp_002','stp_003','stp_004','stp_005','stp_006']::varchar[]
-           ELSE                  ARRAY['stp_001','stp_002','stp_003','stp_004','stp_007','stp_008']::varchar[]
-         END) AS paraderos_asignados,
-       v.ramal, v.sentido
-  FROM variante v;
-
 
 -- ----------------------------------------------------------
 -- Unidades y cuentas (hash bcrypt de "rutasur-demo")

@@ -1,41 +1,75 @@
-# Trazados reales
+# Ruta real de la línea LB
 
-Reemplazan las líneas rectas de `demo/datos_demo.sql` por recorridos que siguen las calles.
+Trazados y paraderos reales de las 4 variantes de la línea LB. Se cargan siempre: en Docker al
+crear la base, en la integración continua y, más adelante, en la nube. Los datos demo
+(`demo/datos_demo.sql`) ya no traen ruta: solo unidades, cuentas y una sesión simulada.
+
+## De dónde salen los datos
+
+| Variante | Trazado | Paraderos candidatos |
+|---|---|---|
+| Mollebaya → Centro (bajada) | Yandex Maps, ruta «LB Mollebaya» (26/10/2026), coincide en 99 % con el GPX propio | Paradas de Yandex |
+| Centro → Mollebaya (subida) | **GPX propio** trazado en BRouter (`Centro_Mollebaya_2026-10-31.gpx`) | Paradas de Yandex a ≤ 25 m del trazado |
+| Cerrillo → Centro | Yandex Maps, ruta «LB Cerrillos» | Paradas de Yandex |
+| Centro → Cerrillo | Yandex Maps, ruta «LB Cerrillos» | Paradas de Yandex |
+
+- **Yandex está desactualizado en la subida a Mollebaya.** Iba por Av. Mariscal Castilla,
+  María Nieves y Bustamante, Av. Argentina y Av. Kennedy. Hoy la ruta va por el Óvalo de
+  Mariscal Castilla, la Av. Jesús y la Av. Porongoche, y por eso se usa el GPX propio.
+- **Terminal de Mollebaya («Santa Ana»).** Es el final del GPX de subida, donde la unidad se
+  queda y de donde sale de bajada. Yandex seguía unos 100 m más por la Calle La Unión. La
+  subida y la bajada comparten este paradero.
+- **Pendiente: ramal Cerrillo.** Hoy sale de Santa Ana, pasa por Yanayaco y llega a Cerrillo,
+  según el chat de la ruta y la información del autor. Yandex todavía lo muestra saliendo de
+  la Calle Grau. Se corregirá con un GPX propio.
+- **Nombres de los paraderos.** El autor los eligió y les puso el nombre que usa la gente con
+  el editor. La referencia de cada paradero es el cruce de calles que da Yandex, cuando
+  aporta algo.
+
+Fuente: Yandex Maps (2026), rutas «LB Mollebaya» y «LB Cerrillos», consulta del 26/10/2026.
+`RutaMollebaya.gpx` es el primer trazado propio (ida y vuelta, 14/10/2026); se conserva como
+referencia.
+
+## Archivos
 
 | Archivo | Qué es |
 |---|---|
-| `RutaMollebaya.gpx` | Recorrido de ida y vuelta del ramal Mollebaya, dibujado en BRouter-Web (33,4 km) |
-| `gpx_a_sql.py` | Convierte el GPX en SQL: lo parte en el punto más alejado del inicio (el Centro) |
-| `plantilla_mollebaya.sql` | Plantilla que usa el conversor |
-| `trazado_mollebaya.sql` | **Generado.** Es el que se aplica a la base |
+| `yandex/T1.txt`, `T0.txt`, `C1.txt`, `C0.txt` | Paradas y trazado de Yandex: Mollebaya ida/vuelta y Cerrillos ida/vuelta |
+| `Centro_Mollebaya_2026-10-31.gpx` | Subida a Mollebaya trazada en BRouter-Web |
+| `yandex/preparar_editor.py` | Une Yandex y el GPX, limpia el GPX, ubica el terminal y preselecciona paraderos (uno cada 300–700 m) |
+| `yandex/editor_paraderos.html` | **Generado.** Editor en el navegador: elegir y nombrar paraderos, y exportar `paraderos.json` |
+| `yandex/datos_editor.json` | **Generado.** Trazados y puntos candidatos; también lo lee el generador SQL |
+| `paraderos.json` | Lo que exporta el editor: paraderos de cada variante y sus nombres |
+| `codigos_paraderos.json` | Código público (`stp_NNN`) de cada paradero. No cambia al volver a exportar |
+| `paraderos_a_sql.py` | Genera `ruta_lb.sql` y avisa si hay nombres repetidos en un mismo sentido |
+| `ruta_lb.sql` | **Generado.** Se aplica a la base |
 
-## Aplicar (PowerShell, en la raíz del proyecto, con Docker levantado)
-
-```
-docker compose exec db psql -U rutasur_owner -d rutasur -f /rutasur/database/datos_reales/trazado_mollebaya.sql
-```
-
-Después: reinicie el simulador (lee el trazado al arrancar) y recargue la app con F5.
-Si se recrea la base con `docker compose down -v`, se debe aplicar otra vez.
-
-## Qué cambia
-
-- **Mollebaya IDA** (Mollebaya → Centro, 17,5 km) y **VUELTA** (Centro → Mollebaya, 15,8 km): trazado real.
-- **Cerrillo queda desactivado** (`variante.activa = false`, paraderos stp_007 y stp_008 inactivos) hasta
-  dibujar su GPX. No se borra nada; se cierran sus sesiones abiertas y el simulador ya no acepta ese ramal.
-- Los paraderos stp_001 a stp_006 se colocan sobre la ruta real; su orden y distancia se recalculan y se
-  valida que ninguno quede a más de 150 m del trazado. Sin Cerrillo no hay tramo común, así que toda la
-  ruta se dibuja en azul. Los nombres siguen siendo de demostración.
-
-Los datos demo originales no se modifican: las pruebas de CI siguen usando `demo/datos_demo.sql`.
-
-> **Pruebas locales:** las de integración del backend esperan los datos demo (4 variantes). Con este
-> trazado aplicado, 6 de ellas fallan en su PC. Para correr `pytest` completo, vuelva a los datos demo
-> con `docker compose down -v` y `docker compose up -d`, y después aplique este script otra vez.
-
-## Volver a generar (si se corrige el GPX)
+## Aplicar a una base que ya existe (PowerShell, en la raíz del proyecto, con Docker levantado)
 
 ```
-cd database\datos_reales
-py gpx_a_sql.py RutaMollebaya.gpx --ramal MOLLEBAYA
+docker compose exec db psql -U rutasur_owner -d rutasur -f /rutasur/database/datos_reales/ruta_lb.sql
 ```
+
+Se puede aplicar varias veces y encima de los datos demo. Actualiza las variantes sin cambiar su
+identificador, así que las unidades, las cuentas y las sesiones se conservan. Los paraderos que
+dejan de usarse quedan inactivos y no se borran.
+
+El script comprueba que el orden que calcula la base sobre cada trazado sea el mismo del editor.
+Si no coinciden, se detiene sin cambiar nada.
+
+## Cambiar paraderos o nombres
+
+1. Abra `yandex/editor_paraderos.html` en el navegador. El avance se guarda en el navegador.
+2. Exporte y reemplace `paraderos.json`.
+3. Vuelva a generar el SQL:
+   ```
+   cd database\datos_reales
+   py paraderos_a_sql.py
+   ```
+4. Aplique `ruta_lb.sql` como se indica arriba.
+
+## Cambiar un trazado (por ejemplo, el ramal Cerrillo con un GPX propio)
+
+1. Agregue el GPX a esta carpeta y regístrelo en `TRAZADO_PROPIO`, en `yandex/preparar_editor.py`.
+2. Ejecute `py yandex\preparar_editor.py`. Regenera el editor y los datos.
+3. Siga los pasos de «Cambiar paraderos o nombres».
