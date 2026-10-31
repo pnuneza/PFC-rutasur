@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paraderos RutaSur</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Herramienta de trabajo: panel de lista a la izquierda, mapa a la derecha; en teléfono, mapa arriba. */
+:root {
+  --bg: #F6F8F8; --panel: #FFFFFF; --fg: #191C1C; --muted: #56605F; --line: #D9E0DF;
+  --primario: #0F5257; --mollebaya: #1D5FD1; --cerrillo: #B4410B;
+  --aviso-bg: #FFE2AE; --aviso-fg: #7A4A00; --ok-bg: #D5EFDA; --ok-fg: #1E6E31;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #111515; --panel: #1A1F1F; --fg: #E4EAE9; --muted: #9AA6A5; --line: #2C3534;
+    --primario: #5FB8BD; --mollebaya: #6E9BF0; --cerrillo: #F08A55;
+    --aviso-bg: #4A3510; --aviso-fg: #FFD58A; --ok-bg: #173A22; --ok-fg: #9BE0AE; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.45 var(--sans); }
+.app { display: grid; grid-template-columns: minmax(320px, 420px) 1fr; grid-template-rows: auto 1fr; height: 100%; }
+header { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px;
+  padding: 12px max(16px, env(safe-area-inset-left)) 12px; background: var(--panel); border-bottom: 1px solid var(--line); }
+header h1 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: .01em; }
+header h1 span { color: var(--muted); font-weight: 400; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tab { border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 999px;
+  padding: 6px 12px; font: 500 13px var(--sans); cursor: pointer; display: inline-flex; gap: 8px; align-items: center; }
+.tab i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.tab[aria-pressed="true"] { background: var(--fg); color: var(--panel); border-color: var(--fg); }
+.tab .n { font-family: var(--mono); font-size: 12px; opacity: .8; }
+.acciones { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+button.prim, button.sec { font: 500 13px var(--sans); border-radius: 8px; padding: 8px 14px; cursor: pointer; }
+button.prim { background: var(--primario); color: #fff; border: 0; }
+button.sec { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--primario); outline-offset: 2px; }
+aside { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+.resumen { padding: 12px 16px; border-bottom: 1px solid var(--line); display: grid; gap: 6px; }
+.resumen .meta { color: var(--muted); font-size: 13px; }
+.resumen .meta b { color: var(--fg); font-family: var(--mono); font-weight: 500; }
+.ayuda { font-size: 12.5px; color: var(--muted); }
+ol.lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 0; }
+ol.lista li { display: grid; grid-template-columns: 28px 1fr auto; gap: 4px 10px; align-items: center;
+  padding: 8px 16px; border-bottom: 1px solid var(--line); }
+ol.lista li.activo { background: color-mix(in srgb, var(--primario) 10%, transparent); }
+.num { font: 500 12px var(--mono); color: var(--muted); text-align: right; }
+.nom { width: 100%; min-width: 0; border: 1px solid transparent; background: transparent; color: var(--fg);
+  font: 14px var(--sans); padding: 4px 6px; border-radius: 6px; }
+.nom:hover, .nom:focus { border-color: var(--line); background: var(--bg); }
+.km { grid-column: 2; font: 12px var(--mono); color: var(--muted); padding-left: 6px; }
+.quitar { grid-row: 1 / span 2; grid-column: 3; border: 0; background: transparent; color: var(--muted);
+  font-size: 18px; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.quitar:hover { color: var(--cerrillo); }
+li.hueco { display: block; padding: 4px 16px; background: var(--aviso-bg); color: var(--aviso-fg); font-size: 12px; }
+#mapa { min-height: 0; }
+.marcador { font: 600 11px var(--mono); color: #fff; border: 2px solid #fff; border-radius: 50%;
+  display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.leaflet-popup-content { font: 13px var(--sans); }
+.leaflet-popup-content b { display: block; margin-bottom: 4px; }
+.leaflet-popup-content small { color: #56605F; }
+.leaflet-popup-content button { margin-top: 8px; }
+.aviso { position: fixed; bottom: max(16px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%);
+  background: var(--fg); color: var(--panel); padding: 10px 16px; border-radius: 8px; font-size: 13px; z-index: 2000; }
+textarea#salida { width: 100%; height: 120px; font: 11px var(--mono); }
+@media (max-width: 760px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto 45vh 1fr; }
+  #mapa { grid-row: 2; } aside { grid-row: 3; border-right: 0; }
+  .acciones { margin-left: 0; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Paraderos RutaSur <span>· Línea LB</span></h1>
+    <div class="tabs" id="tabs" role="group" aria-label="Variante"></div>
+    <div class="acciones">
+      <button class="sec" id="btn-reset" type="button">Restablecer selección</button>
+      <button class="sec" id="btn-copiar" type="button">Copiar resultado</button>
+      <button class="prim" id="btn-descargar" type="button">Descargar paraderos.json</button>
+    </div>
+  </header>
+  <aside>
+    <div class="resumen">
+      <div id="titulo-variante" style="font-weight:600"></div>
+      <div class="meta" id="meta"></div>
+      <div class="ayuda">Toca un punto gris del mapa para agregarlo como paradero; toca un número para quitarlo. Corrige los nombres en la lista: así los verá el pasajero. Los paraderos del tramo común se comparten entre Mollebaya y Cerrillos.</div>
+    </div>
+    <ol class="lista" id="lista"></ol>
+    <textarea id="salida" hidden aria-label="Resultado para copiar"></textarea>
+  </aside>
+  <div id="mapa"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+const DATOS = /*__DATOS__*/null;
+const COLOR = { MOLLEBAYA: getComputedStyle(document.documentElement).getPropertyValue('--mollebaya').trim() || '#1D5FD1',
+                CERRILLO: getComputedStyle(document.documentElement).getPropertyValue('--cerrillo').trim() || '#B4410B' };
+const ETIQ = { 'MOLLEBAYA-IDA': 'Mollebaya → Centro', 'MOLLEBAYA-VUELTA': 'Centro → Mollebaya',
+               'CERRILLO-IDA': 'Cerrillos → Centro', 'CERRILLO-VUELTA': 'Centro → Cerrillos' };
+const CLAVE_LS = 'rutasur-paraderos-v2';
+const CLAVE_LS_ANTERIOR = 'rutasur-paraderos-v1';
+// Variantes cuyo trazado cambió desde la versión anterior del editor: empiezan de nuevo
+const RENOVADAS = ['MOLLEBAYA-VUELTA'];  // su trazado cambió el 31/10/2026
+
+// Estado: qué paraderos tiene cada variante y el nombre de cada punto
+let estado = inicial();
+try {
+  const g = JSON.parse(localStorage.getItem(CLAVE_LS));
+  if (g && g.sel && g.nombres) estado = g;
+  else migrarAnterior(JSON.parse(localStorage.getItem(CLAVE_LS_ANTERIOR)));
+} catch (e) {}
+sanear();
+
+// Ajusta lo guardado a los datos actuales: si un trazado cambió, descarta los puntos
+// que ya no están en él, agrega los obligatorios (terminales) y completa los nombres.
+function sanear() {
+  for (const v of DATOS.variantes) {
+    const validas = new Set(v.paradas.map(p => p[0]));
+    const guardadas = (estado.sel[v.id] || v.elegidas).filter(k => validas.has(k));
+    estado.sel[v.id] = [...new Set([...guardadas, ...(v.obligatorias || [])])];
+  }
+  for (const [k, p] of Object.entries(DATOS.paradas)) if (!estado.nombres[k]) estado.nombres[k] = p.nombre;
+  guardar();
+}
+
+// Conserva el trabajo hecho con la versión anterior: los nombres corregidos y la
+// selección de las variantes que no cambiaron (solo puntos que siguen en el trazado).
+function migrarAnterior(g) {
+  if (!g || !g.sel || !g.nombres) return;
+  for (const [k, n] of Object.entries(g.nombres)) if (k in DATOS.paradas) estado.nombres[k] = n;
+  for (const v of DATOS.variantes) {
+    if (RENOVADAS.includes(v.id) || !g.sel[v.id]) continue;
+    const validas = new Set(v.paradas.map(p => p[0]));
+    const conservadas = g.sel[v.id].filter(k => validas.has(k));
+    // Los terminales se agregan siempre, aunque no existieran en la versión anterior
+    estado.sel[v.id] = [...new Set([...conservadas, ...(v.obligatorias || [])])];
+  }
+  guardar();
+}
+function inicial() {
+  const sel = {}; const nombres = {};
+  for (const v of DATOS.variantes) sel[v.id] = v.elegidas.slice();
+  for (const [k, p] of Object.entries(DATOS.paradas)) nombres[k] = p.nombre;
+  return { sel, nombres };
+}
+function guardar() { try { localStorage.setItem(CLAVE_LS, JSON.stringify(estado)); } catch (e) {} }
+
+let actual = DATOS.variantes[0].id;
+const variante = id => DATOS.variantes.find(v => v.id === id);
+
+// Mapa
+const mapa = L.map('mapa', { zoomControl: true });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+  maxZoom: 20, subdomains: 'abcd',
+  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/">CARTO</a> · Datos de ruta: Yandex Maps y GPX propio (BRouter)'
+}).addTo(mapa);
+const capaFondo = L.layerGroup().addTo(mapa), capaRuta = L.layerGroup().addTo(mapa),
+      capaPuntos = L.layerGroup().addTo(mapa), capaSel = L.layerGroup().addTo(mapa);
+const ll = c => [c[1], c[0]];
+
+function alternar(clave, poner) {
+  // Aplica el cambio en todas las variantes que pasan por ese punto (tramo común)
+  for (const v of DATOS.variantes) {
+    if (!v.paradas.some(p => p[0] === clave)) continue;
+    const s = new Set(estado.sel[v.id]);
+    if (poner) s.add(clave); else s.delete(clave);
+    estado.sel[v.id] = [...s];
+  }
+  guardar(); dibujar();
+}
+
+function ordenadas(v) {
+  const s = new Set(estado.sel[v.id]);
+  return v.paradas.filter(p => s.has(p[0]));
+}
+
+function dibujar(encuadrar) {
+  const v = variante(actual);
+  capaFondo.clearLayers(); capaRuta.clearLayers(); capaPuntos.clearLayers(); capaSel.clearLayers();
+  for (const o of DATOS.variantes) if (o.id !== v.id)
+    L.polyline(o.trazado.map(ll), { color: '#8A9493', weight: 3, opacity: .35 }).addTo(capaFondo);
+  const linea = L.polyline(v.trazado.map(ll), { color: COLOR[v.ramal], weight: 5, opacity: .85 }).addTo(capaRuta);
+  const elegidas = new Set(estado.sel[v.id]);
+  for (const [clave, d] of v.paradas) {
+    if (elegidas.has(clave)) continue;
+    const p = DATOS.paradas[clave];
+    L.circleMarker([p.lat, p.lon], { radius: 5, color: '#5E6968', weight: 1, fillColor: '#FFFFFF', fillOpacity: 1 })
+      .bindTooltip(`${p.nombre_yandex} · ${(d / 1000).toFixed(2)} km`, { direction: 'top' })
+      .on('click', () => { alternar(clave, true); aviso('Paradero agregado'); })
+      .addTo(capaPuntos);
+  }
+  const lista = ordenadas(v);
+  lista.forEach(([clave, d], i) => {
+    const p = DATOS.paradas[clave];
+    const icono = L.divIcon({ className: '', html: `<div class="marcador" style="background:${COLOR[v.ramal]};width:24px;height:24px">${i + 1}</div>`, iconSize: [24, 24], iconAnchor: [12, 12] });
+    const m = L.marker([p.lat, p.lon], { icon: icono, keyboard: true, title: estado.nombres[clave] }).addTo(capaSel);
+    const cont = document.createElement('div');
+    cont.innerHTML = `<b></b><small></small><br><button class="sec" type="button">Quitar paradero</button>`;
+    cont.querySelector('b').textContent = `${i + 1}. ${estado.nombres[clave]}`;
+    cont.querySelector('small').textContent = `Yandex: ${p.nombre_yandex} · km ${(d / 1000).toFixed(2)}`;
+    cont.querySelector('button').onclick = () => { mapa.closePopup(); alternar(clave, false); aviso('Paradero quitado'); };
+    m.bindPopup(cont).on('click', () => marcarFila(clave));
+  });
+  pintarLista(v, lista);
+  pintarTabs();
+  if (encuadrar) mapa.fitBounds(linea.getBounds(), { padding: [24, 24] });
+}
+
+function pintarLista(v, lista) {
+  document.getElementById('titulo-variante').textContent = `${ETIQ[v.id]} · destino «${v.destino}»`;
+  const gaps = lista.slice(1).map((p, i) => p[1] - lista[i][1]);
+  const maxGap = gaps.length ? Math.max(...gaps) : 0;
+  document.getElementById('meta').innerHTML =
+    `<b>${lista.length}</b> paraderos · recorrido <b>${(v.longitud_m / 1000).toFixed(1)} km</b> · separación máxima <b>${maxGap} m</b> · ${v.paradas.length} puntos en Yandex`;
+  const ol = document.getElementById('lista'); ol.innerHTML = '';
+  lista.forEach(([clave, d], i) => {
+    if (i > 0 && d - lista[i - 1][1] > 900) {
+      const h = document.createElement('li'); h.className = 'hueco';
+      h.textContent = `Tramo de ${d - lista[i - 1][1]} m sin paraderos: considera agregar uno.`;
+      ol.appendChild(h);
+    }
+    const li = document.createElement('li'); li.dataset.clave = clave;
+    li.innerHTML = `<span class="num">${i + 1}</span><input class="nom" id="n-${v.id}-${i}" aria-label="Nombre del paradero ${i + 1}"><button class="quitar" type="button" aria-label="Quitar paradero">×</button><span class="km">km ${(d / 1000).toFixed(2)}</span>`;
+    const inp = li.querySelector('input'); inp.value = estado.nombres[clave];
+    inp.addEventListener('change', () => { estado.nombres[clave] = inp.value.trim() || DATOS.paradas[clave].nombre; guardar(); dibujar(); });
+    inp.addEventListener('focus', () => { const p = DATOS.paradas[clave]; mapa.panTo([p.lat, p.lon]); marcarFila(clave); });
+    li.querySelector('.quitar').onclick = () => { alternar(clave, false); aviso('Paradero quitado'); };
+    ol.appendChild(li);
+  });
+}
+
+function marcarFila(clave) {
+  document.querySelectorAll('ol.lista li').forEach(li => li.classList.toggle('activo', li.dataset.clave === clave));
+  const li = document.querySelector(`ol.lista li[data-clave="${clave}"]`); if (li) li.scrollIntoView({ block: 'nearest' });
+}
+
+function pintarTabs() {
+  const t = document.getElementById('tabs'); t.innerHTML = '';
+  for (const v of DATOS.variantes) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'tab';
+    b.setAttribute('aria-pressed', v.id === actual);
+    b.innerHTML = `<i style="background:${COLOR[v.ramal]}"></i>${ETIQ[v.id]} <span class="n">${estado.sel[v.id].length}</span>`;
+    b.onclick = () => { actual = v.id; dibujar(true); };
+    t.appendChild(b);
+  }
+}
+
+function resultado() {
+  const usadas = new Set(Object.values(estado.sel).flat());
+  return JSON.stringify({
+    fuente: DATOS.fuente, generado: new Date().toISOString(),
+    paraderos: [...usadas].map(k => ({ clave: k, nombre: estado.nombres[k], lon: DATOS.paradas[k].lon, lat: DATOS.paradas[k].lat, nombre_yandex: DATOS.paradas[k].nombre_yandex })),
+    variantes: DATOS.variantes.map(v => ({ id: v.id, ramal: v.ramal, sentido: v.sentido, destino: v.destino,
+      trazado: v.trazado, paraderos: ordenadas(v).map(p => p[0]) })),
+  });
+}
+
+let t0; function aviso(txt) { let a = document.querySelector('.aviso'); if (!a) { a = document.createElement('div'); a.className = 'aviso'; a.setAttribute('role', 'status'); document.body.appendChild(a); } a.textContent = txt; a.hidden = false; clearTimeout(t0); t0 = setTimeout(() => a.hidden = true, 1800); }
+
+document.getElementById('btn-descargar').onclick = () => {
+  const url = URL.createObjectURL(new Blob([resultado()], { type: 'application/json' }));
+  const a = document.createElement('a'); a.href = url; a.download = 'paraderos.json'; a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000); aviso('Archivo descargado: paraderos.json');
+};
+document.getElementById('btn-copiar').onclick = async () => {
+  const txt = resultado();
+  try { await navigator.clipboard.writeText(txt); aviso('Resultado copiado'); }
+  catch (e) { const s = document.getElementById('salida'); s.hidden = false; s.value = txt; s.select(); aviso('Selecciona el texto y cópialo con Ctrl+C'); }
+};
+let confirmar = false;
+document.getElementById('btn-reset').onclick = (e) => {
+  if (!confirmar) { confirmar = true; e.target.textContent = '¿Seguro? Toca otra vez'; setTimeout(() => { confirmar = false; e.target.textContent = 'Restablecer selección'; }, 3000); return; }
+  confirmar = false; e.target.textContent = 'Restablecer selección';
+  estado = inicial(); guardar(); dibujar(); aviso('Se restableció la selección sugerida');
+};
+
+dibujar(true);
+</script>
+</body>
+</html>

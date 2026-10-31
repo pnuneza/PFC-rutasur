@@ -1,6 +1,10 @@
 """Pruebas de la API pública contra PostgreSQL + PostGIS con los datos demo."""
 
+import unicodedata
+
 import pytest
+
+from tests.conftest import paraderos_de
 
 pytestmark = pytest.mark.integracion
 
@@ -35,26 +39,48 @@ def test_linea_lb_tiene_cuatro_variantes_con_trazado_y_paraderos(cliente):
         assert distancias == sorted(distancias), "los paraderos deben ir en orden de recorrido"
 
 
-def test_un_paradero_compartido_ocupa_posiciones_inversas_en_ida_y_vuelta(cliente):
-    variantes = {
-        (v["branch"], v["direction"]): v
-        for v in cliente.get("/api/v1/routes/lb").json()["data"]["variants"]
-    }
-    ida = [p["code"] for p in variantes[("MOLLEBAYA", "IDA")]["stops"]]
-    vuelta = [p["code"] for p in variantes[("MOLLEBAYA", "VUELTA")]["stops"]]
-    assert ida == list(reversed(vuelta))
+def test_paradero_del_tramo_comun_esta_en_ambos_ramales(linea):
+    ramales_de = {}
+    for v in linea["variants"]:
+        for p in v["stops"]:
+            ramales_de.setdefault(p["code"], set()).add(v["branch"])
+    for v in linea["variants"]:
+        for p in v["stops"]:
+            assert p["shared_trunk"] == (ramales_de[p["code"]] == {"MOLLEBAYA", "CERRILLO"}), p[
+                "name"
+            ]
+
+
+def test_terminal_de_mollebaya_es_el_mismo_paradero_en_ida_y_vuelta(linea):
+    """La unidad termina la subida y empieza la bajada en el mismo lugar (Santa Ana)."""
+    ida = paraderos_de(linea, "MOLLEBAYA", "IDA")
+    vuelta = paraderos_de(linea, "MOLLEBAYA", "VUELTA")
+    assert ida[0]["code"] == vuelta[-1]["code"]
 
 
 # --- buscarParaderos -----------------------------------------------------
-@pytest.mark.parametrize("texto", ["plaza", "PLAZA", "pláza", "characato"])
-def test_busqueda_sin_distinguir_mayusculas_ni_tildes(cliente, texto):
-    codigos = [p["code"] for p in cliente.get("/api/v1/stops", params={"q": texto}).json()["data"]]
-    assert "stp_004" in codigos
+def _sin_tildes(texto):
+    return unicodedata.normalize("NFD", texto).encode("ascii", "ignore").decode()
 
 
-def test_busqueda_indica_los_ramales_de_cada_paradero(cliente):
-    plaza = cliente.get("/api/v1/stops", params={"q": "plaza"}).json()["data"][0]
-    assert sorted(plaza["branches"]) == ["CERRILLO", "MOLLEBAYA"]
+def test_busqueda_sin_distinguir_mayusculas_ni_tildes(cliente, linea):
+    # Un paradero real cuyo nombre lleva tilde; se busca sin tilde y en mayúsculas
+    con_tilde = next(
+        p for v in linea["variants"] for p in v["stops"] if _sin_tildes(p["name"]) != p["name"]
+    )
+    palabra = next(w for w in con_tilde["name"].split() if _sin_tildes(w) != w and len(w) >= 3)
+    for texto in (palabra, palabra.upper(), _sin_tildes(palabra), _sin_tildes(palabra).upper()):
+        codigos = [
+            p["code"] for p in cliente.get("/api/v1/stops", params={"q": texto}).json()["data"]
+        ]
+        assert con_tilde["code"] in codigos, texto
+
+
+def test_busqueda_indica_los_ramales_de_cada_paradero(cliente, linea):
+    comun = next(p for v in linea["variants"] for p in v["stops"] if p["shared_trunk"])
+    resultado = cliente.get("/api/v1/stops", params={"q": comun["name"][:40]}).json()["data"]
+    encontrado = next(p for p in resultado if p["code"] == comun["code"])
+    assert sorted(encontrado["branches"]) == ["CERRILLO", "MOLLEBAYA"]
 
 
 @pytest.mark.parametrize("texto", ["%%", "__", "%_"])
@@ -85,17 +111,17 @@ def test_filtro_por_ramal(cliente):
 
 
 # --- consultarLlegadas ---------------------------------------------------
-def test_llegadas_a_un_paradero_por_delante_de_la_unidad(cliente):
-    llegadas = cliente.get("/api/v1/stops/stp_001/arrivals").json()["data"]
+def test_llegadas_a_un_paradero_por_delante_de_la_unidad(cliente, paradero_destino_07):
+    llegadas = cliente.get(f"/api/v1/stops/{paradero_destino_07}/arrivals").json()["data"]
     u07 = next(e for e in llegadas if e["vehicle_label"] == "07")
     assert u07["destination"] == "Centro (2 de Mayo)"
     assert u07["distance_m"] > 0
     assert u07["eta_seconds"] > 0
 
 
-def test_paradero_que_la_unidad_ya_paso_no_la_muestra(cliente):
-    # La unidad 07 va de Mollebaya al Centro y ya dejó atrás el paradero final de Mollebaya
-    llegadas = cliente.get("/api/v1/stops/stp_006/arrivals").json()["data"]
+def test_paradero_que_la_unidad_ya_paso_no_la_muestra(cliente, paradero_ya_pasado_por_07):
+    # La unidad 07 va de Mollebaya al Centro y ya salió del terminal de Mollebaya
+    llegadas = cliente.get(f"/api/v1/stops/{paradero_ya_pasado_por_07}/arrivals").json()["data"]
     assert all(e["vehicle_label"] != "07" for e in llegadas)
 
 

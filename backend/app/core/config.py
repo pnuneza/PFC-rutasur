@@ -8,6 +8,7 @@ despliega en la PC del desarrollador, en la integración continua y en Render
 
 from functools import lru_cache
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,6 +30,38 @@ class Configuracion(BaseSettings):
     cors_origenes: list[str] = []
 
     entorno: str = "desarrollo"
+
+    # RN-012: días que se conservan posiciones, sesiones cerradas y eventos. En la capa
+    # gratuita de Neon (1 GB) conviene menos de 30.
+    retencion_dias: int = 30
+    # Depuración automática al arrancar y cada 24 h. Sin valor: solo en producción.
+    depuracion_automatica: bool | None = None
+
+    @field_validator("database_url")
+    @classmethod
+    def _usar_controlador_psycopg(cls, url: str) -> str:
+        """Neon y Render entregan «postgresql://…»; SQLAlchemy necesita el controlador explícito."""
+        for prefijo in ("postgresql://", "postgres://"):
+            if url.startswith(prefijo):
+                return "postgresql+psycopg://" + url[len(prefijo) :]
+        return url
+
+    @field_validator("retencion_dias")
+    @classmethod
+    def _retencion_valida(cls, dias: int) -> int:
+        if dias < 1:
+            raise ValueError("RETENCION_DIAS debe ser 1 o más")
+        return dias
+
+    @property
+    def es_produccion(self) -> bool:
+        return self.entorno == "produccion"
+
+    @property
+    def depurar_automaticamente(self) -> bool:
+        if self.depuracion_automatica is None:
+            return self.es_produccion
+        return self.depuracion_automatica
 
 
 @lru_cache
