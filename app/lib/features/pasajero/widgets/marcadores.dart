@@ -54,7 +54,7 @@ class MarcadorUnidad extends StatelessWidget {
   });
 
   /// Tamaño del marcador. La flecha queda exactamente en el centro, sobre la posición.
-  static const double ancho = 150;
+  static const double ancho = 200; // cabe «07 → Centro (2 de Mayo)» a 16 sp
   static const double alto = 96;
   static const double _diametro = 36;
 
@@ -104,7 +104,7 @@ class MarcadorUnidad extends StatelessWidget {
                   '${unidad.etiqueta} → ${unidad.destino}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700),
+                  style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w700),
                 ),
               ),
             ],

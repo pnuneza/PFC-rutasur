@@ -50,7 +50,7 @@ class EtiquetaEstado extends StatelessWidget {
             child: Text(
               texto,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(color: colorTexto, fontWeight: FontWeight.w600, fontSize: 13),
+              style: TextStyle(color: colorTexto, fontWeight: FontWeight.w600, fontSize: 16),
             ),
           ),
         ],
@@ -79,7 +79,7 @@ class EtiquetaDestino extends StatelessWidget {
       child: Text(
         textoDestino(destino),
         overflow: TextOverflow.ellipsis,
-        style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13),
+        style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 16),
       ),
     );
   }

@@ -51,7 +51,7 @@ class _PantallaMapaState extends State<PantallaMapa> {
               IconButton(
                 tooltip: 'Ayuda',
                 icon: const Icon(Icons.help_outline),
-                onPressed: () => mostrarAyuda(context),
+                onPressed: () => mostrarAyuda(context, linea: c.linea),
               ),
             ],
           ),

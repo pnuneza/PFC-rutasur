@@ -25,7 +25,7 @@ from app.api.v1.esquemas import (
     UnidadActivaDTO,
     VarianteDTO,
 )
-from app.db.conexion import obtener_motor
+from app.db.conexion import cupo_de_conexion, obtener_motor
 from app.domain.modelos import Ramal
 from app.services.servicio_flota import ServicioFlota
 from app.services.servicio_llegadas import ServicioLlegadas
@@ -55,6 +55,8 @@ def _ahora() -> datetime:
     tags=["ISalud"],
     summary="verificarEstado — estado del servicio",
     response_model=Respuesta[EstadoServicioDTO],
+    # También pasa por el cupo: bajo carga no debe dejar hilos esperando conexión (D-11)
+    dependencies=[Depends(cupo_de_conexion)],
 )
 def verificar_estado(response: Response) -> Respuesta[EstadoServicioDTO]:
     """Estado, versión y hora del servidor. Lo consulta el monitor de disponibilidad (RNF-03)."""
@@ -135,7 +137,16 @@ def obtener_linea(servicio: ServicioRutas = Depends(servicio_rutas)) -> Respuest
     responses=ERRORES_COMUNES,
 )
 def buscar_paraderos(
-    q: Annotated[str, Query(min_length=2, max_length=40, description="Parte del nombre")],
+    q: Annotated[
+        str,
+        # Sin caracteres de control: un byte nulo hacía fallar a PostgreSQL con 500 (D-08)
+        Query(
+            min_length=2,
+            max_length=40,
+            pattern=r"^[^\x00-\x1f\x7f]+$",
+            description="Parte del nombre",
+        ),
+    ],
     servicio: ServicioRutas = Depends(servicio_rutas),
 ) -> Respuesta[list[ParaderoEncontradoDTO]]:
     """Hasta 20 paraderos cuyo nombre contiene el texto, sin mayúsculas ni tildes (RF-005)."""

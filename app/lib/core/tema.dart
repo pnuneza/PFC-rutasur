@@ -41,9 +41,33 @@ ThemeData temaRutaSur() {
     surface: ColoresRutaSur.fondo,
     onSurface: ColoresRutaSur.texto,
   );
-  return ThemeData(
+  final base = ThemeData(
     useMaterial3: true,
     colorScheme: esquema,
     scaffoldBackgroundColor: ColoresRutaSur.fondo,
+  );
+  return base.copyWith(textTheme: conTextoMinimo(base.textTheme));
+}
+
+/// Tamaño mínimo de todo texto informativo (P06, sección 2.14; D-10).
+const double tamanoTextoMinimo = 16;
+
+/// Sube a 16 sp los estilos que Material 3 trae más pequeños (12–14 sp):
+/// cuerpo, etiquetas de botones y títulos pequeños. Pensado para leer en la
+/// calle, con el teléfono en la mano y a pleno sol.
+TextTheme conTextoMinimo(TextTheme base) {
+  TextStyle? minimo(TextStyle? estilo) {
+    final tamano = estilo?.fontSize ?? tamanoTextoMinimo;
+    return tamano >= tamanoTextoMinimo ? estilo : estilo?.copyWith(fontSize: tamanoTextoMinimo);
+  }
+
+  return base.copyWith(
+    bodyLarge: minimo(base.bodyLarge),
+    bodyMedium: minimo(base.bodyMedium),
+    bodySmall: minimo(base.bodySmall),
+    labelLarge: minimo(base.labelLarge),
+    labelMedium: minimo(base.labelMedium),
+    labelSmall: minimo(base.labelSmall),
+    titleSmall: minimo(base.titleSmall),
   );
 }
