@@ -76,10 +76,9 @@ def test_rf005_busqueda_sin_coincidencias_es_lista_vacia_y_no_error(cliente):
 
 
 def test_rf005_texto_con_espacios_alrededor_se_encuentra(cliente):
-    codigos = [
-        p["code"] for p in cliente.get("/api/v1/stops", params={"q": " plaza "}).json()["data"]
-    ]
-    assert "stp_004" in codigos
+    sin_espacios = cliente.get("/api/v1/stops", params={"q": "plaza"}).json()["data"]
+    con_espacios = cliente.get("/api/v1/stops", params={"q": " plaza "}).json()["data"]
+    assert sin_espacios and con_espacios == sin_espacios
 
 
 def test_rf005_sin_parametro_q_es_400(cliente):
@@ -92,20 +91,21 @@ def test_rf005_limites_de_longitud_aceptados(cliente, texto):
 
 
 # --- RF-018: llegadas y tiempo estimado -----------------------------------
-def test_rf018_llegadas_ordenadas_por_tiempo(cliente):
-    llegadas = cliente.get("/api/v1/stops/stp_001/arrivals").json()["data"]
+def test_rf018_llegadas_ordenadas_por_tiempo(cliente, paradero_destino_07):
+    llegadas = cliente.get(f"/api/v1/stops/{paradero_destino_07}/arrivals").json()["data"]
+    assert llegadas, "la unidad 07 de los datos demo va hacia este paradero"
     tiempos = [e["eta_seconds"] for e in llegadas]
     assert tiempos == sorted(tiempos)
 
 
-def test_rf018_ninguna_llegada_supera_60_minutos(cliente):
+def test_rf018_ninguna_llegada_supera_60_minutos(cliente, paradero_destino_07):
     """RN-007."""
-    for e in cliente.get("/api/v1/stops/stp_001/arrivals").json()["data"]:
+    for e in cliente.get(f"/api/v1/stops/{paradero_destino_07}/arrivals").json()["data"]:
         assert 0 < e["eta_seconds"] <= 3600
 
 
-def test_rf018_cada_llegada_indica_si_es_confiable(cliente):
-    for e in cliente.get("/api/v1/stops/stp_001/arrivals").json()["data"]:
+def test_rf018_cada_llegada_indica_si_es_confiable(cliente, paradero_destino_07):
+    for e in cliente.get(f"/api/v1/stops/{paradero_destino_07}/arrivals").json()["data"]:
         assert isinstance(e["reliable"], bool)
 
 
@@ -118,10 +118,10 @@ def test_rf008_frescura_es_uno_de_los_tres_estados(cliente):
 # --- Contrato general -------------------------------------------------------
 @pytest.mark.parametrize(
     "ruta",
-    ["/api/v1/health", "/api/v1/routes/lb", "/api/v1/vehicles", "/api/v1/stops/stp_001/arrivals"],
+    ["/api/v1/health", "/api/v1/routes/lb", "/api/v1/vehicles", "/api/v1/stops/{destino}/arrivals"],
 )
-def test_toda_respuesta_exitosa_tiene_hora_iso_8601_en_utc(cliente, ruta):
-    marca = cliente.get(ruta).json()["meta"]["timestamp"]
+def test_toda_respuesta_exitosa_tiene_hora_iso_8601_en_utc(cliente, ruta, paradero_destino_07):
+    marca = cliente.get(ruta.format(destino=paradero_destino_07)).json()["meta"]["timestamp"]
     assert datetime.fromisoformat(marca).utcoffset().total_seconds() == 0
 
 

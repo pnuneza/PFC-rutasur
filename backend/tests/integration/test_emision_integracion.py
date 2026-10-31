@@ -17,6 +17,7 @@ from app.repositories.sql_emision import RepositorioEmisionSQL
 from app.repositories.sql_rutas import RepositorioRutasSQL
 from app.services.servicio_emision import ServicioEmision
 from app.services.validador_posiciones import ValidadorPosiciones
+from tests.conftest import paraderos_de
 
 pytestmark = pytest.mark.integracion
 
@@ -54,7 +55,7 @@ def lecturas(recorrido: Recorrido, inicio: datetime, metros: list[float]) -> lis
 
 
 def test_unidad_emite_y_aparece_en_el_mapa_y_en_las_llegadas(
-    sesion, cliente, emision, unidad_12, recorrido_cerrillo_ida
+    sesion, cliente, linea, emision, unidad_12, recorrido_cerrillo_ida
 ):
     unidad_id, cuenta_id = unidad_12
     abierta = emision.abrir_sesion(
@@ -73,10 +74,12 @@ def test_unidad_emite_y_aparece_en_el_mapa_y_en_las_llegadas(
     assert u12["destination"] == "Centro (2 de Mayo)"
     assert u12["freshness"] == "VIGENTE"
 
-    # Y en las llegadas al Centro, con la distancia restante medida sobre el trazado
-    llegadas = cliente.get("/api/v1/stops/stp_001/arrivals").json()["data"]
+    # Y en las llegadas al último paradero (en el Centro), con la distancia restante
+    # medida sobre el trazado
+    centro = paraderos_de(linea, "CERRILLO", "IDA")[-1]
+    llegadas = cliente.get(f"/api/v1/stops/{centro['code']}/arrivals").json()["data"]
     l12 = next(e for e in llegadas if e["vehicle_label"] == "12")
-    restante_esperado = recorrido_cerrillo_ida.longitud_m - 1100
+    restante_esperado = centro["distance_from_start_m"] - 1100
     assert l12["distance_m"] == pytest.approx(restante_esperado, rel=0.02)
     assert l12["eta_seconds"] == pytest.approx(l12["distance_m"] / 10, rel=0.02)  # 36 km/h = 10 m/s
     assert l12["reliable"] is True

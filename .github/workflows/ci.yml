@@ -88,7 +88,10 @@ jobs:
       - name: Crear el esquema
         run: DATABASE_URL="$OWNER_URL" bash database/aplicar_esquema.sh
 
-      - name: Cargar datos de demostración
+      - name: Cargar la ruta real de la línea LB
+        run: psql "$OWNER_URL" -v ON_ERROR_STOP=1 -q -f database/datos_reales/ruta_lb.sql
+
+      - name: Cargar datos de demostración (unidades, cuentas y una sesión)
         run: psql "$OWNER_URL" -v ON_ERROR_STOP=1 -q -f database/demo/datos_demo.sql
 
       - name: Pruebas de integridad de la base de datos (51 pruebas)

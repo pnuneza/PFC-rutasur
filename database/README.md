@@ -14,7 +14,9 @@ database/
 │   ├── 05_funciones.sql         # Funciones, triggers y vista
 │   ├── 06_roles.sql             # Rol de la aplicación con permisos mínimos
 │   └── 07_semilla.sql           # Línea LB
-├── demo/datos_demo.sql          # Datos ficticios para desarrollo
+├── datos_reales/                # Ruta real de la línea LB: trazados y paraderos (ver su README)
+│   └── ruta_lb.sql              # Se carga siempre, después del esquema
+├── demo/datos_demo.sql          # Unidades, cuentas y una sesión ficticias para desarrollo
 ├── pruebas/
 │   ├── 01_pruebas_integridad.sql   # 51 pruebas de reglas y seguridad
 │   └── 02_prueba_rendimiento.sql   # Carga de 1,7 millones de posiciones
@@ -36,7 +38,8 @@ database/
    ```
    docker compose up -d
    ```
-   La primera vez descarga la imagen y crea el esquema completo con los datos demo.
+   La primera vez descarga la imagen, crea el esquema, carga la ruta real de la línea LB
+   y agrega los datos demo (unidades, cuentas y una sesión).
 3. Verifique que esté sana (columna STATUS = `healthy`):
    ```
    docker compose ps

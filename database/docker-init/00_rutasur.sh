@@ -8,6 +8,10 @@
 
 bash /rutasur/database/aplicar_esquema.sh
 
+echo "RutaSur: cargando la ruta real de la línea LB (trazados y paraderos)..."
+psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \
+     -f /rutasur/database/datos_reales/ruta_lb.sql
+
 if [ "${RUTASUR_CARGAR_DEMO:-no}" = "si" ]; then
     echo "RutaSur: cargando datos de demostración..."
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" \

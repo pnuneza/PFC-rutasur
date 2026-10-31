@@ -64,3 +64,31 @@ def cliente_real(motor: Engine) -> Iterator[TestClient]:
     """
     with TestClient(app) as c:
         yield c
+
+
+# ----------------------------------------------------------------------
+# Paraderos de la ruta real, tomados de la propia API (sin códigos fijos):
+# así las pruebas siguen valiendo cuando se renombran o agregan paraderos.
+# ----------------------------------------------------------------------
+@pytest.fixture
+def linea(cliente: TestClient) -> dict:
+    return cliente.get("/api/v1/routes/lb").json()["data"]
+
+
+def paraderos_de(linea: dict, ramal: str, sentido: str) -> list[dict]:
+    variante = next(
+        v for v in linea["variants"] if (v["branch"], v["direction"]) == (ramal, sentido)
+    )
+    return variante["stops"]
+
+
+@pytest.fixture
+def paradero_destino_07(linea: dict) -> str:
+    """Último paradero de Mollebaya → Centro: la unidad 07 de los datos demo va hacia él."""
+    return paraderos_de(linea, "MOLLEBAYA", "IDA")[-1]["code"]
+
+
+@pytest.fixture
+def paradero_ya_pasado_por_07(linea: dict) -> str:
+    """Primer paradero de Mollebaya → Centro (Santa Ana): la unidad 07 ya salió de ahí."""
+    return paraderos_de(linea, "MOLLEBAYA", "IDA")[0]["code"]
