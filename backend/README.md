@@ -49,7 +49,7 @@ Abra **http://localhost:8000/docs**: es la documentación interactiva del contra
 > Si PowerShell bloquea `Activate.ps1`, ejecute una vez:
 > `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
 
-## Operaciones disponibles (Sprint 2)
+## Operaciones disponibles
 
 | Interfaz | Método y ruta | Función | RF |
 |---|---|---|---|
@@ -58,6 +58,10 @@ Abra **http://localhost:8000/docs**: es la documentación interactiva del contra
 | IConsultaPublica | `GET /api/v1/stops?q=` | Búsqueda de paraderos sin mayúsculas ni tildes | RF-005 |
 | IConsultaPublica | `GET /api/v1/vehicles` | Unidades en servicio con frescura del dato | RF-002, 003, 008 |
 | IConsultaPublica | `GET /api/v1/stops/{code}/arrivals` | Próximas llegadas ordenadas por ETA | RF-004, 018 |
+| IAutenticacion | `POST /api/v1/auth/login` | Token JWT (12 h) para el conductor o el panel; bloqueo a los 5 fallos | RF-009, 014 |
+| IEmision | `POST /api/v1/sessions` | Abre la sesión de la unidad del token (cierra la anterior, RN-002) | RF-010, 013 |
+| IEmision | `POST /api/v1/sessions/{id}/positions` | Lote de 1 a 200 posiciones; acuse idempotente; 60 envíos/min | RF-011, 012, 019 |
+| IEmision | `POST /api/v1/sessions/{id}/close` | Cierra la sesión | RF-010 |
 
 **Pendiente para el Sprint 3:** `IAutenticacion` (login con JWT), los endpoints HTTP de `IEmision` (la lógica ya está en `servicio_emision.py`), `IAdministracion`, límite de peticiones y tareas programadas.
 
@@ -90,3 +94,18 @@ Para comprobar un despliegue:
 ```
 python -m app.herramientas.verificar_despliegue https://rutasur-api.onrender.com
 ```
+
+## Cuentas y simulación
+
+```
+python -m app.herramientas.cuentas listar
+python -m app.herramientas.cuentas crear-conductor --unidad 07
+python -m app.herramientas.cuentas crear-panel --usuario pierre.admin --rol ADMINISTRADOR
+
+# Simular una unidad transmitiendo por la API, como la app del conductor
+$env:RUTASUR_CLAVE = "(contraseña)"
+python -m app.herramientas.simular_unidad --api http://localhost:8000 --usuario unidad07 --ramal MOLLEBAYA --sentido IDA
+```
+
+En `/docs`, el botón **Authorize** acepta el token de `POST /auth/login` para probar las
+operaciones del conductor.

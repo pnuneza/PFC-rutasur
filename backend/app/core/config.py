@@ -8,8 +8,10 @@ despliega en la PC del desarrollador, en la integración continua y en Render
 
 from functools import lru_cache
 
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+CLAVE_DE_DESARROLLO = "solo-para-desarrollo-local-no-usar-en-produccion"
 
 
 class Configuracion(BaseSettings):
@@ -30,6 +32,10 @@ class Configuracion(BaseSettings):
     cors_origenes: list[str] = []
 
     entorno: str = "desarrollo"
+
+    # Clave con la que se firman los tokens (P05 Tabla 34). En producción la genera
+    # Render y nunca está en el repositorio; la de desarrollo solo sirve en local.
+    jwt_secreto: str = CLAVE_DE_DESARROLLO
 
     # RN-012: días que se conservan posiciones, sesiones cerradas y eventos. En la capa
     # gratuita de Neon (1 GB) conviene menos de 30.
@@ -52,6 +58,14 @@ class Configuracion(BaseSettings):
         if dias < 1:
             raise ValueError("RETENCION_DIAS debe ser 1 o más")
         return dias
+
+    @model_validator(mode="after")
+    def _clave_segura_en_produccion(self) -> "Configuracion":
+        if self.es_produccion and (
+            self.jwt_secreto == CLAVE_DE_DESARROLLO or len(self.jwt_secreto) < 32
+        ):
+            raise ValueError("En producción JWT_SECRETO debe tener al menos 32 caracteres propios")
+        return self
 
     @property
     def es_produccion(self) -> bool:

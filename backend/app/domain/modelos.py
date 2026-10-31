@@ -38,6 +38,14 @@ class MotivoDescarte(StrEnum):
     PRECISION_INSUFICIENTE = "PRECISION_INSUFICIENTE"
 
 
+class Rol(StrEnum):
+    """Roles con cuenta (P05 Tabla 35). El pasajero no tiene cuenta."""
+
+    CONDUCTOR = "CONDUCTOR"
+    MODERADOR = "MODERADOR"
+    ADMINISTRADOR = "ADMINISTRADOR"
+
+
 class Frescura(StrEnum):
     """Estados de la frescura del dato mostrado al pasajero (P05, Figura 26)."""
 
@@ -197,3 +205,37 @@ class AcuseLote:
     publicadas: int
     descartadas: int
     duplicadas: int
+
+
+# ---------------------------------------------------------------------------
+# Autenticación (CU-03 y P06 Tabla 52)
+# ---------------------------------------------------------------------------
+@dataclass(frozen=True, slots=True)
+class CuentaAcceso:
+    """Cuenta de conductor o del panel, con lo necesario para autenticarla."""
+
+    id: UUID
+    usuario: str
+    hash_contrasena: str
+    rol: Rol
+    activa: bool
+    bloqueada_hasta: datetime | None
+    unidad_id: UUID | None = None  # solo conductores
+    etiqueta_unidad: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class Identidad:
+    """Quién hace la petición, según su token. La unidad sale de aquí, nunca del cuerpo."""
+
+    cuenta_id: UUID
+    rol: Rol
+    unidad_id: UUID | None = None
+    etiqueta_unidad: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class TokenEmitido:
+    token: str
+    vigencia_s: int
+    identidad: Identidad

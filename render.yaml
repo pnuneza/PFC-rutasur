@@ -28,6 +28,9 @@ services:
       # el servicio; nunca se escribe en el repositorio.
       - key: DATABASE_URL
         sync: false
+      # Clave de firma de los tokens: Render la genera al azar y nadie necesita verla
+      - key: JWT_SECRETO
+        generateValue: true
       # RN-012 con el límite de 1 GB de Neon gratuito: 14 días de historial
       - key: RETENCION_DIAS
         value: "14"

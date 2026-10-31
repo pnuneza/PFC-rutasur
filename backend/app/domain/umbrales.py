@@ -27,5 +27,14 @@ class Umbrales:
     frescura_vigente_s: int = 30
     frescura_demorada_s: int = 90  # más allá: NO_CONFIABLE
 
+    # Autenticación (P05 Tabla 34, P06 Tabla 52)
+    vigencia_token_s: int = 12 * 3600  # un turno de trabajo
+    intentos_antes_de_bloqueo: int = 5  # RN-011
+    bloqueo_s: int = 15 * 60
+
+    # Protección contra abuso (P05 Tabla 34, P06 §2.15.2)
+    envios_por_minuto_por_unidad: int = 60  # cuenta peticiones, no posiciones
+    ingresos_por_minuto_por_origen: int = 10
+
 
 UMBRALES_POR_DEFECTO = Umbrales()

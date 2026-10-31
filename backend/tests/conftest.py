@@ -92,3 +92,12 @@ def paradero_destino_07(linea: dict) -> str:
 def paradero_ya_pasado_por_07(linea: dict) -> str:
     """Primer paradero de Mollebaya → Centro (Santa Ana): la unidad 07 ya salió de ahí."""
     return paraderos_de(linea, "MOLLEBAYA", "IDA")[0]["code"]
+
+
+@pytest.fixture(autouse=True)
+def _limites_limpios() -> None:
+    """Los límites de peticiones viven en memoria: cada prueba empieza de cero."""
+    from app.api.dependencias import limite_envios, limite_ingresos
+
+    limite_envios._marcas.clear()
+    limite_ingresos._marcas.clear()

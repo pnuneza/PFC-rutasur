@@ -18,9 +18,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.domain.excepciones import (
     AccesoDenegado,
+    CredencialesInvalidas,
+    CuentaBloqueada,
     ErrorDeNegocio,
+    LimiteExcedido,
     RecursoNoEncontrado,
     SesionNoActiva,
+    TokenInvalido,
     UnidadInactiva,
 )
 
@@ -33,12 +37,26 @@ ERRORES_DE_NEGOCIO: dict[type[ErrorDeNegocio], tuple[int, str]] = {
     SesionNoActiva: (status.HTTP_409_CONFLICT, "SESSION_NOT_ACTIVE"),
     UnidadInactiva: (status.HTTP_409_CONFLICT, "UNIT_INACTIVE"),
     AccesoDenegado: (status.HTTP_403_FORBIDDEN, "FORBIDDEN"),
+    CredencialesInvalidas: (status.HTTP_401_UNAUTHORIZED, "INVALID_CREDENTIALS"),
+    TokenInvalido: (status.HTTP_401_UNAUTHORIZED, "TOKEN_MISSING_OR_EXPIRED"),
+    CuentaBloqueada: (status.HTTP_403_FORBIDDEN, "ACCOUNT_LOCKED"),
+    LimiteExcedido: (status.HTTP_429_TOO_MANY_REQUESTS, "RATE_LIMITED"),
     ErrorDeNegocio: (status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR"),
 }
 
 
-def respuesta_error(estado: int, codigo: str, mensaje: str) -> JSONResponse:
-    return JSONResponse(status_code=estado, content={"error": {"code": codigo, "message": mensaje}})
+def respuesta_error(
+    estado: int, codigo: str, mensaje: str, reintentar_en_s: int | None = None
+) -> JSONResponse:
+    contenido: dict = {"error": {"code": codigo, "message": mensaje}}
+    cabeceras = {}
+    if reintentar_en_s is not None:
+        # Cuenta bloqueada o límite superado: la app sabe cuánto esperar (P06 Tabla 52)
+        contenido["meta"] = {"retry_after_s": reintentar_en_s}
+        cabeceras["Retry-After"] = str(reintentar_en_s)
+    if estado == status.HTTP_401_UNAUTHORIZED:
+        cabeceras["WWW-Authenticate"] = "Bearer"
+    return JSONResponse(status_code=estado, content=contenido, headers=cabeceras)
 
 
 def _mensaje_de_validacion(exc: RequestValidationError) -> str:
@@ -61,7 +79,7 @@ async def _error_de_negocio(_: Request, exc: Exception) -> JSONResponse:
     for clase in type(exc).__mro__:
         if clase in ERRORES_DE_NEGOCIO:
             estado, codigo = ERRORES_DE_NEGOCIO[clase]
-            return respuesta_error(estado, codigo, str(exc))
+            return respuesta_error(estado, codigo, str(exc), getattr(exc, "reintentar_en_s", None))
     return await _error_inesperado(_, exc)
 
 
