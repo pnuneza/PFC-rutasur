@@ -32,6 +32,7 @@ rutasur/
 | Backend | Python + FastAPI |
 | Base de datos | PostgreSQL + PostGIS |
 | Control de versiones | Git + GitHub |
+| Calidad | Ruff, Bandit, pytest |
 | Integración continua | GitHub Actions |
 
 ## Estrategia de ramas (Git Flow)
@@ -70,4 +71,36 @@ Versionado semántico `MAJOR.MINOR.PATCH`. La primera versión estable es `v1.0.
 
 ## Puesta en marcha
 
-_Se completará a medida que avance la implementación (base de datos → backend → apps)._
+### Requisitos
+
+- Docker Desktop
+- Git
+
+### 1. Base de datos
+
+```
+cp .env.example .env        # luego cambie las contraseñas en .env
+docker compose up -d        # crea la base con el esquema y datos demo
+docker compose ps           # debe aparecer "healthy"
+```
+
+En `database/README.md` están las pruebas, el respaldo y la trazabilidad con el diseño.
+
+### 2. Backend
+
+Requiere Python 3.12. En PowerShell:
+
+```
+cd backend
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+copy .env.example .env      # luego ponga la contraseña de rutasur_app
+uvicorn app.main:app --reload
+```
+
+La documentación interactiva de la API queda en http://localhost:8000/docs. En `backend/README.md` están el simulador de unidad y las herramientas de calidad.
+
+### 3. App del pasajero (Flutter)
+
+Requiere Flutter y un emulador de Android. Los pasos de la primera vez y de la demostración están en `app/README.md`.

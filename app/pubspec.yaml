@@ -1,0 +1,25 @@
+name: rutasur
+description: "RutaSur v1.0 — seguimiento en tiempo real de los buses de la línea LB (Cono Sur de Arequipa)."
+publish_to: "none"
+version: 0.2.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Mapa sobre OpenStreetMap (P05, Tabla 29)
+  flutter_map: ^8.2.0
+  latlong2: ^0.9.1
+  # Cliente HTTP para la API REST
+  http: ^1.2.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  # Reglas de estilo de Effective Dart (verificadas con `flutter analyze`)
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

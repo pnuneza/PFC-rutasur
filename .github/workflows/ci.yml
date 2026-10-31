@@ -1,0 +1,132 @@
+# ==========================================================
+# RutaSur v1.0 — Integración continua
+#
+# Se ejecuta en cada push y en cada pull request hacia develop o main.
+# Si algún paso falla, GitHub marca el commit con ❌ y el PR no se
+# debería fusionar hasta corregirlo.
+#
+#   1. calidad   → estilo (Ruff), formato y seguridad (Bandit)
+#   2. pruebas   → crea una base PostgreSQL + PostGIS limpia, aplica el
+#                  esquema, corre las 51 pruebas SQL y las pruebas del backend
+#   3. app       → análisis estático y pruebas de la app Flutter
+# ==========================================================
+name: CI
+
+on:
+  push:
+    branches: [develop, main, "feature/**"]
+  pull_request:
+    branches: [develop, main]
+
+permissions:
+  contents: read
+
+jobs:
+  calidad:
+    name: Calidad del código (Ruff + Bandit + pip-audit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Instalar dependencias
+        run: pip install -e ".[dev]"
+
+      - name: Análisis estático (Ruff)
+        run: ruff check app tests --output-format github
+
+      - name: Formato (Ruff)
+        run: ruff format --check app tests
+
+      - name: Seguridad (Bandit)
+        run: bandit -c pyproject.toml -r app
+
+      - name: Dependencias con vulnerabilidades conocidas (pip-audit)
+        # El propio paquete del proyecto no está publicado en PyPI: se omite
+        run: |
+          pip install pip-audit
+          pip-audit --skip-editable
+
+  pruebas:
+    name: Pruebas (base de datos + backend)
+    runs-on: ubuntu-latest
+    needs: calidad
+
+    # Base de datos desechable, solo para esta ejecución.
+    # Las contraseñas son de prueba: el contenedor se destruye al terminar.
+    services:
+      db:
+        image: postgis/postgis:16-3.4
+        env:
+          POSTGRES_DB: rutasur
+          POSTGRES_USER: rutasur_owner
+          POSTGRES_PASSWORD: ci_owner_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U rutasur_owner -d rutasur"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    env:
+      OWNER_URL: postgresql://rutasur_owner:ci_owner_password@localhost:5432/rutasur
+      RUTASUR_APP_PASSWORD: ci_app_password
+      DATABASE_URL: postgresql+psycopg://rutasur_app:ci_app_password@localhost:5432/rutasur
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Crear el esquema
+        run: DATABASE_URL="$OWNER_URL" bash database/aplicar_esquema.sh
+
+      - name: Cargar datos de demostración
+        run: psql "$OWNER_URL" -v ON_ERROR_STOP=1 -q -f database/demo/datos_demo.sql
+
+      - name: Pruebas de integridad de la base de datos (51 pruebas)
+        run: psql "$OWNER_URL" -v ON_ERROR_STOP=1 -f database/pruebas/01_pruebas_integridad.sql
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
+
+      - name: Instalar dependencias del backend
+        working-directory: backend
+        run: pip install -e ".[dev]"
+
+      - name: Pruebas del backend (unitarias, integración, funcionales, seguridad y E2E) con cobertura
+        working-directory: backend
+        run: pytest --cov --cov-report=term-missing --cov-fail-under=85
+
+  app:
+    name: App Flutter (análisis + pruebas)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: Análisis estático (flutter analyze)
+        run: flutter analyze --no-fatal-infos
+
+      - name: Pruebas unitarias y de widgets
+        run: flutter test
