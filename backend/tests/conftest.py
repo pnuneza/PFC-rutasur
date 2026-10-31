@@ -1,6 +1,7 @@
-"""Preparación de las pruebas de integración.
+"""Preparación compartida de las pruebas que usan la base de datos.
 
-Necesitan la base de datos de Docker en marcha, con los datos demo cargados.
+La usan las carpetas integration, funcionales, seguridad y e2e. Necesitan la base
+de Docker en marcha, con los datos demo cargados; las pruebas unitarias no.
 Cada prueba trabaja dentro de una transacción que se deshace al terminar: la base
 queda exactamente como estaba. Si la base no está disponible, se omiten.
 """
@@ -52,3 +53,14 @@ def cliente(sesion: Session) -> Iterator[TestClient]:
         yield TestClient(app)
     finally:
         app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def cliente_real(motor: Engine) -> Iterator[TestClient]:
+    """Cliente con el grupo de conexiones real, sin transacción compartida.
+
+    Solo para pruebas de lectura: cada petición abre y confirma su propia sesión,
+    igual que en producción. Lo usan las pruebas de concurrencia y la prueba E2E.
+    """
+    with TestClient(app) as c:
+        yield c

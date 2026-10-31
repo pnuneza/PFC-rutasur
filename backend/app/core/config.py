@@ -19,6 +19,12 @@ class Configuracion(BaseSettings):
     # Conexión con el rol de permisos mínimos (rutasur_app), nunca con el dueño del esquema
     database_url: str = "postgresql+psycopg://rutasur_app@localhost:5432/rutasur"
 
+    # Grupo de conexiones: Neon gratuito admite pocas conexiones simultáneas.
+    # El cupo de peticiones concurrentes a la base es la suma de ambos (D-11).
+    db_pool_size: int = 5
+    db_max_overflow: int = 5
+    db_pool_timeout_s: int = 10
+
     # Dominios autorizados a llamar a la API desde un navegador (panel web)
     cors_origenes: list[str] = []
 

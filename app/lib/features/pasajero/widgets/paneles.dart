@@ -7,6 +7,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../core/tema.dart';
+import '../../../domain/geometria.dart';
+import '../../../domain/modelos.dart';
 import '../controlador_mapa.dart';
 import 'etiqueta_estado.dart';
 
@@ -97,33 +99,48 @@ class TarjetaSinUnidades extends StatelessWidget {
   }
 }
 
+/// Líneas de la leyenda según lo que realmente se dibuja en el mapa (D-07).
+///
+/// Solo aparecen los ramales que tienen variantes activas, y el tramo común solo
+/// si hay más de un ramal y la línea tiene paraderos compartidos. Antes la leyenda
+/// era fija y seguía mostrando Cerrillo cuando ese ramal estaba desactivado.
+List<({Color color, String texto})> entradasLeyenda(Linea? linea) {
+  if (linea == null) return const [];
+  final activos = {for (final v in linea.variantes) v.ramal};
+  return [
+    for (final ramal in Ramal.values)
+      if (activos.contains(ramal)) (color: ColoresRutaSur.deRamal(ramal), texto: 'Ramal ${ramal.nombre}'),
+    if (activos.length > 1 && tramoComun(linea) != null)
+      (color: ColoresRutaSur.tramoComun, texto: 'Tramo común hasta 2 de Mayo'),
+  ];
+}
+
 /// P-06 (parcial): leyenda del mapa y significado de los estados del dato.
-Future<void> mostrarAyuda(BuildContext context) {
+Future<void> mostrarAyuda(BuildContext context, {required Linea? linea}) {
+  final leyenda = entradasLeyenda(linea);
   return showDialog<void>(
     context: context,
     builder: (context) => AlertDialog(
       title: const Text('¿Cómo leer el mapa?'),
-      content: const SingleChildScrollView(
+      content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Muestra(color: ColoresRutaSur.mollebaya, texto: 'Ramal Mollebaya'),
-            _Muestra(color: ColoresRutaSur.cerrillo, texto: 'Ramal Cerrillo'),
-            _Muestra(color: ColoresRutaSur.tramoComun, texto: 'Tramo común hasta 2 de Mayo'),
-            SizedBox(height: 12),
-            Text('Toca un paradero para ver qué unidades llegan y en cuántos minutos. '
+            for (final e in leyenda) _Muestra(color: e.color, texto: e.texto),
+            if (leyenda.isNotEmpty) const SizedBox(height: 12),
+            const Text('Toca un paradero para ver qué unidades llegan y en cuántos minutos. '
                 'Toca una unidad para ver su detalle.'),
-            SizedBox(height: 12),
-            Text('Estado del dato', style: TextStyle(fontWeight: FontWeight.w700)),
-            SizedBox(height: 4),
-            Text('Vigente: 30 segundos o menos.\n'
+            const SizedBox(height: 12),
+            const Text('Estado del dato', style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            const Text('Vigente: 30 segundos o menos.\n'
                 'Demorado: entre 30 y 90 segundos.\n'
                 'No confiable: más de 90 segundos.'),
-            SizedBox(height: 12),
-            Text('Privacidad', style: TextStyle(fontWeight: FontWeight.w700)),
-            SizedBox(height: 4),
-            Text('La aplicación no pide cuenta ni guarda datos personales. '
+            const SizedBox(height: 12),
+            const Text('Privacidad', style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 4),
+            const Text('La aplicación no pide cuenta ni guarda datos personales. '
                 'Tu ubicación nunca sale de tu teléfono.'),
           ],
         ),
@@ -149,7 +166,7 @@ class _Muestra extends StatelessWidget {
         children: [
           Container(width: 28, height: 6, color: color),
           const SizedBox(width: 8),
-          Text(texto),
+          Flexible(child: Text(texto)),
         ],
       ),
     );

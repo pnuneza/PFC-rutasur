@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   calidad:
-    name: Calidad del código (Ruff + Bandit)
+    name: Calidad del código (Ruff + Bandit + pip-audit)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -48,6 +48,12 @@ jobs:
 
       - name: Seguridad (Bandit)
         run: bandit -c pyproject.toml -r app
+
+      - name: Dependencias con vulnerabilidades conocidas (pip-audit)
+        # El propio paquete del proyecto no está publicado en PyPI: se omite
+        run: |
+          pip install pip-audit
+          pip-audit --skip-editable
 
   pruebas:
     name: Pruebas (base de datos + backend)
@@ -98,7 +104,7 @@ jobs:
         working-directory: backend
         run: pip install -e ".[dev]"
 
-      - name: Pruebas del backend (unitarias + integración) con cobertura
+      - name: Pruebas del backend (unitarias, integración, funcionales, seguridad y E2E) con cobertura
         working-directory: backend
         run: pytest --cov --cov-report=term-missing --cov-fail-under=85
 
