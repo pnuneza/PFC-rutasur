@@ -26,6 +26,15 @@ if [ "${#RUTASUR_APP_PASSWORD}" -lt 20 ]; then
     exit 1
 fi
 
+# Error típico: pegar otra cosa (por ejemplo, una contraseña) en lugar de la cadena.
+# psql la tomaría como nombre de base y probaría la base LOCAL del contenedor.
+case "$DATABASE_URL" in
+    postgresql://*|postgres://*) ;;
+    *)
+        echo "ERROR: DATABASE_URL debe empezar con postgresql:// (copie la cadena de Connect en Neon)" >&2
+        exit 1 ;;
+esac
+
 case "$DATABASE_URL" in
     *localhost*|*127.0.0.1*|*@db:*|*@db/*)
         echo "ERROR: DATABASE_URL apunta a la base local, no a la nube" >&2

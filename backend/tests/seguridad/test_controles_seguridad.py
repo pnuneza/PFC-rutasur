@@ -63,7 +63,11 @@ def test_sin_hsts_fuera_de_produccion(cliente):
 
 
 def test_con_hsts_en_produccion(monkeypatch):
-    monkeypatch.setattr(main, "obtener_configuracion", lambda: Configuracion(entorno="produccion"))
+    monkeypatch.setattr(
+        main,
+        "obtener_configuracion",
+        lambda: Configuracion(entorno="produccion", jwt_secreto="p" * 40),
+    )
     h = TestClient(main.crear_app()).get("/docs").headers
     assert h["strict-transport-security"].startswith("max-age=31536000")
 
@@ -83,3 +87,65 @@ def test_metodo_no_permitido_usa_el_formato_de_error(cliente):
 def test_error_de_validacion_no_expone_la_traza(cliente):
     texto = cliente.get("/api/v1/stops", params={"q": "a"}).text
     assert "Traceback" not in texto and "pydantic" not in texto.lower()
+
+
+# --- A01 / A07: control de acceso a la emisión (P05 Tabla 35) ---------------------
+RUTAS_CONDUCTOR = [
+    ("/api/v1/sessions", {"branch": "MOLLEBAYA", "direction": "IDA"}),
+    ("/api/v1/sessions/00000000-0000-0000-0000-000000000000/positions", {"positions": []}),
+    ("/api/v1/sessions/00000000-0000-0000-0000-000000000000/close", None),
+]
+
+
+@pytest.mark.parametrize(("ruta", "cuerpo"), RUTAS_CONDUCTOR)
+def test_sin_token_la_emision_es_401(cliente, ruta, cuerpo):
+    r = cliente.post(ruta, json=cuerpo)
+    assert r.status_code == 401
+    assert r.json()["error"]["code"] == "TOKEN_MISSING_OR_EXPIRED"
+
+
+@pytest.mark.parametrize(
+    "token",
+    [
+        "no-es-un-token",
+        # alg «none», sin firma
+        "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJpc3MiOiJydXRhc3VyLWFwaSIsInJvbCI6IkNPTkRVQ1RPUiJ9.",
+    ],
+)
+def test_token_falso_es_401(cliente, token):
+    r = cliente.post(
+        "/api/v1/sessions",
+        json={"branch": "MOLLEBAYA", "direction": "IDA"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 401
+
+
+@pytest.mark.parametrize("usuario", ["admin.demo", "moderador.demo"])
+def test_el_panel_no_puede_emitir_posiciones(cliente, usuario):
+    token = cliente.post(
+        "/api/v1/auth/login", json={"username": usuario, "password": "rutasur-demo"}
+    ).json()["data"]["access_token"]
+    r = cliente.post(
+        "/api/v1/sessions",
+        json={"branch": "MOLLEBAYA", "direction": "IDA"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert r.status_code == 403
+    assert r.json()["error"]["code"] == "FORBIDDEN"
+
+
+def test_la_contrasena_no_viaja_en_la_respuesta_ni_en_el_token(cliente):
+    r = cliente.post(
+        "/api/v1/auth/login", json={"username": "unidad07", "password": "rutasur-demo"}
+    )
+    assert "rutasur-demo" not in r.text
+    import base64
+
+    cuerpo = r.json()["data"]["access_token"].split(".")[1]
+    assert b"rutasur-demo" not in base64.urlsafe_b64decode(cuerpo + "==")
+
+
+def test_produccion_no_arranca_con_la_clave_de_desarrollo():
+    with pytest.raises(ValueError, match="JWT_SECRETO"):
+        Configuracion(entorno="produccion")

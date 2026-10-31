@@ -13,6 +13,7 @@ from uuid import UUID
 from app.domain.modelos import (
     CandidatoLlegada,
     Coordenada,
+    CuentaAcceso,
     EstadoSesion,
     LineaRuta,
     MedicionTrazado,
@@ -20,6 +21,7 @@ from app.domain.modelos import (
     PosicionValidada,
     Ramal,
     ReferenciaPosicion,
+    Rol,
     Sentido,
     SesionEmision,
     UnidadEnServicio,
@@ -71,4 +73,24 @@ class RepositorioEmision(Protocol):
 
     def registrar_evento(
         self, tipo: str, origen: str, unidad_id: UUID | None, detalle: dict[str, Any]
+    ) -> None: ...
+
+
+class RepositorioCuentas(Protocol):
+    def buscar_por_usuario(self, usuario: str) -> CuentaAcceso | None: ...
+
+    def registrar_fallo(
+        self, cuenta: CuentaAcceso, intentos_maximos: int, bloquear_hasta: datetime
+    ) -> bool:
+        """Suma un intento fallido; al llegar al máximo bloquea. Devuelve si quedó bloqueada."""
+        ...
+
+    def registrar_ingreso(self, cuenta: CuentaAcceso) -> None: ...
+
+    def cuenta_vigente(self, cuenta_id: UUID, rol: Rol) -> bool:
+        """La cuenta sigue activa (y, si es de conductor, también su unidad)."""
+        ...
+
+    def registrar_evento(
+        self, tipo: str, origen: str, cuenta: CuentaAcceso | None, detalle: dict[str, Any]
     ) -> None: ...

@@ -70,6 +70,37 @@ python -m app.herramientas.verificar_despliegue https://rutasur-api.onrender.com
 (use la URL que Render muestre). Todas las líneas deben decir `OK`. La primera puede
 tardar un minuto si el servicio estaba apagado.
 
+## Paso 4 — Cuentas en producción
+
+La base de la nube no tiene datos demo: las unidades y sus cuentas se crean con la
+herramienta de cuentas. Mientras no exista el panel (Módulo 6), es la única forma.
+En la carpeta `backend`, con el entorno virtual activo:
+
+```powershell
+$env:DATABASE_URL = "postgresql://rutasur_app:(contraseña)@ep-….neon.tech/neondb?sslmode=require"
+python -m app.herramientas.cuentas crear-conductor --unidad 07
+python -m app.herramientas.cuentas crear-panel --usuario pierre.admin --rol ADMINISTRADOR
+python -m app.herramientas.cuentas listar
+Remove-Item Env:DATABASE_URL     # vuelve a usar la base local
+```
+
+Cada contraseña aparece **una sola vez**. En la base solo queda su hash.
+
+Para ver una unidad en el mapa público sin tener la app del conductor:
+```powershell
+$env:RUTASUR_CLAVE = "(contraseña de unidad07)"
+python -m app.herramientas.simular_unidad --api https://rutasur-api.onrender.com `
+    --usuario unidad07 --ramal MOLLEBAYA --sentido IDA
+```
+
+## Clave de los tokens (JWT_SECRETO)
+
+Render la genera al azar (`generateValue` en `render.yaml`). Si algún despliegue falla con
+«JWT_SECRETO debe tener al menos 32 caracteres», agréguela a mano en **Environment** con
+cualquier texto aleatorio de 32 caracteres o más. Mientras tanto, Render sigue sirviendo
+la versión anterior, porque la nueva no pasa el health check. Si se cambia la clave, todos
+los usuarios deben volver a ingresar.
+
 ## Actualizar la ruta en la nube
 
 Después de cambiar paraderos o trazados (`database/datos_reales/README.md`), vuelva a

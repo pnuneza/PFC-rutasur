@@ -28,7 +28,11 @@ def test_depuracion_llama_a_la_funcion_de_la_base(motor):
 @pytest.fixture
 def cliente_produccion(sesion: Session, monkeypatch) -> TestClient:
     """La API tal como corre en Render (entorno de producción), sobre la base de prueba."""
-    monkeypatch.setattr(main, "obtener_configuracion", lambda: Configuracion(entorno="produccion"))
+    monkeypatch.setattr(
+        main,
+        "obtener_configuracion",
+        lambda: Configuracion(entorno="produccion", jwt_secreto="p" * 40),
+    )
     app = main.crear_app()
 
     def _sesion_de_prueba() -> Iterator[Session]:
