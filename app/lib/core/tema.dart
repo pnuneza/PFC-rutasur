@@ -56,9 +56,13 @@ const double tamanoTextoMinimo = 16;
 /// cuerpo, etiquetas de botones y títulos pequeños. Pensado para leer en la
 /// calle, con el teléfono en la mano y a pleno sol.
 TextTheme conTextoMinimo(TextTheme base) {
-  TextStyle? minimo(TextStyle? estilo) {
-    final tamano = estilo?.fontSize ?? tamanoTextoMinimo;
-    return tamano >= tamanoTextoMinimo ? estilo : estilo?.copyWith(fontSize: tamanoTextoMinimo);
+  // En ThemeData los estilos aún no traen tamaño (null): Flutter lo agrega después,
+  // desde Typography.englishLike, con 11–14 sp para estos estilos. Por eso un tamaño
+  // vacío también se fija en 16; solo se respeta un tamaño explícito mayor.
+  TextStyle minimo(TextStyle? estilo) {
+    final tamano = estilo?.fontSize;
+    if (estilo != null && tamano != null && tamano >= tamanoTextoMinimo) return estilo;
+    return (estilo ?? const TextStyle()).copyWith(fontSize: tamanoTextoMinimo);
   }
 
   return base.copyWith(

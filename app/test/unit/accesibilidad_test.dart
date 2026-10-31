@@ -54,8 +54,17 @@ void main() {
   });
 
   group('Texto mínimo de 16 sp (D-10)', () {
-    test('todos los estilos de cuerpo, etiquetas y títulos miden 16 sp o más', () {
-      final t = temaRutaSur().textTheme;
+    testWidgets('todos los estilos de cuerpo, etiquetas y títulos miden 16 sp o más',
+        (tester) async {
+      // Se mide el tema ya aplicado, con los tamaños que Flutter agrega al pintar
+      late TextTheme t;
+      await tester.pumpWidget(MaterialApp(
+        theme: temaRutaSur(),
+        home: Builder(builder: (context) {
+          t = Theme.of(context).textTheme;
+          return const SizedBox();
+        }),
+      ));
       final estilos = {
         'bodyLarge': t.bodyLarge,
         'bodyMedium': t.bodyMedium,
@@ -70,6 +79,7 @@ void main() {
       estilos.forEach((nombre, estilo) {
         expect(estilo?.fontSize, greaterThanOrEqualTo(tamanoTextoMinimo), reason: nombre);
       });
+      expect(t.titleLarge?.fontSize, 22, reason: 'los títulos grandes no se achican');
     });
 
     test('no achica los estilos que ya eran grandes', () {
