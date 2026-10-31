@@ -40,7 +40,7 @@ def test_el_servicio_arranca_la_depuracion_solo_si_corresponde(monkeypatch):
 
     for config, esperado in [
         (Configuracion(entorno="desarrollo"), []),
-        (Configuracion(entorno="produccion", retencion_dias=14), [14]),
+        (Configuracion(entorno="produccion", jwt_secreto="p" * 40, retencion_dias=14), [14]),
     ]:
         arrancadas.clear()
         monkeypatch.setattr(main, "obtener_configuracion", lambda c=config: c)

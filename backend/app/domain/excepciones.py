@@ -23,3 +23,30 @@ class UnidadInactiva(ErrorDeNegocio):
 
 class AccesoDenegado(ErrorDeNegocio):
     """La sesión pertenece a otra unidad (403 FORBIDDEN)."""
+
+
+class CredencialesInvalidas(ErrorDeNegocio):
+    """Usuario o contraseña incorrectos, o cuenta deshabilitada (401 INVALID_CREDENTIALS).
+
+    El mensaje es el mismo en todos los casos para no revelar qué usuarios existen.
+    """
+
+
+class CuentaBloqueada(ErrorDeNegocio):
+    """Cinco intentos fallidos: la cuenta espera 15 minutos (403 ACCOUNT_LOCKED)."""
+
+    def __init__(self, mensaje: str, reintentar_en_s: int) -> None:
+        super().__init__(mensaje)
+        self.reintentar_en_s = reintentar_en_s
+
+
+class TokenInvalido(ErrorDeNegocio):
+    """Falta el token, venció o no es auténtico (401 TOKEN_MISSING_OR_EXPIRED)."""
+
+
+class LimiteExcedido(ErrorDeNegocio):
+    """Se superó el límite de peticiones (429 RATE_LIMITED)."""
+
+    def __init__(self, mensaje: str, reintentar_en_s: int) -> None:
+        super().__init__(mensaje)
+        self.reintentar_en_s = reintentar_en_s

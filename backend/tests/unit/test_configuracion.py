@@ -39,5 +39,5 @@ def test_retencion_menor_a_un_dia_es_invalida():
     ],
 )
 def test_depuracion_automatica_por_defecto_solo_en_produccion(entorno, explicita, esperado):
-    config = Configuracion(entorno=entorno, depuracion_automatica=explicita)
+    config = Configuracion(entorno=entorno, depuracion_automatica=explicita, jwt_secreto="p" * 40)
     assert config.depurar_automaticamente is esperado
