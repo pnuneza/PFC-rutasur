@@ -91,7 +91,7 @@ textarea#salida { width: 100%; height: 120px; font: 11px var(--mono); }
     <div class="resumen">
       <div id="titulo-variante" style="font-weight:600"></div>
       <div class="meta" id="meta"></div>
-      <div class="ayuda">Toca un punto gris del mapa para agregarlo como paradero; toca un número para quitarlo. Corrige los nombres en la lista: así los verá el pasajero. Los paraderos del tramo común se comparten entre Mollebaya y Cerrillos.</div>
+      <div class="ayuda">Toca un punto gris del mapa para agregarlo como paradero (los anaranjados son puntos de apoyo donde Yandex no tiene paradas, como el tramo de Yanayaco); toca un número para quitarlo. Corrige los nombres en la lista: así los verá el pasajero. Los paraderos del tramo común se comparten entre Mollebaya y Cerrillos.</div>
     </div>
     <ol class="lista" id="lista"></ol>
     <textarea id="salida" hidden aria-label="Resultado para copiar"></textarea>
@@ -105,10 +105,10 @@ const COLOR = { MOLLEBAYA: getComputedStyle(document.documentElement).getPropert
                 CERRILLO: getComputedStyle(document.documentElement).getPropertyValue('--cerrillo').trim() || '#B4410B' };
 const ETIQ = { 'MOLLEBAYA-IDA': 'Mollebaya → Centro', 'MOLLEBAYA-VUELTA': 'Centro → Mollebaya',
                'CERRILLO-IDA': 'Cerrillos → Centro', 'CERRILLO-VUELTA': 'Centro → Cerrillos' };
-const CLAVE_LS = 'rutasur-paraderos-v2';
-const CLAVE_LS_ANTERIOR = 'rutasur-paraderos-v1';
+const CLAVE_LS = 'rutasur-paraderos-v3';
+const CLAVE_LS_ANTERIOR = 'rutasur-paraderos-v2';
 // Variantes cuyo trazado cambió desde la versión anterior del editor: empiezan de nuevo
-const RENOVADAS = ['MOLLEBAYA-VUELTA'];  // su trazado cambió el 31/10/2026
+const RENOVADAS = ['CERRILLO-IDA', 'CERRILLO-VUELTA'];  // trazados propios del 01/11/2026
 
 // Estado: qué paraderos tiene cada variante y el nombre de cada punto
 let estado = inicial();
@@ -192,8 +192,11 @@ function dibujar(encuadrar) {
   for (const [clave, d] of v.paradas) {
     if (elegidas.has(clave)) continue;
     const p = DATOS.paradas[clave];
-    L.circleMarker([p.lat, p.lon], { radius: 5, color: '#5E6968', weight: 1, fillColor: '#FFFFFF', fillOpacity: 1 })
-      .bindTooltip(`${p.nombre_yandex} · ${(d / 1000).toFixed(2)} km`, { direction: 'top' })
+    // Puntos de apoyo (tramos sin paradas de Yandex): más chicos y anaranjados
+    const apoyo = !p.nombre_yandex;
+    L.circleMarker([p.lat, p.lon], { radius: apoyo ? 4 : 5, color: apoyo ? '#B4410B' : '#5E6968', weight: 1,
+                                     fillColor: apoyo ? '#FBE3D3' : '#FFFFFF', fillOpacity: 1 })
+      .bindTooltip(`${p.nombre_yandex || 'Punto de apoyo (Yandex no tiene parada aquí)'} · ${(d / 1000).toFixed(2)} km`, { direction: 'top' })
       .on('click', () => { alternar(clave, true); aviso('Paradero agregado'); })
       .addTo(capaPuntos);
   }
@@ -205,7 +208,7 @@ function dibujar(encuadrar) {
     const cont = document.createElement('div');
     cont.innerHTML = `<b></b><small></small><br><button class="sec" type="button">Quitar paradero</button>`;
     cont.querySelector('b').textContent = `${i + 1}. ${estado.nombres[clave]}`;
-    cont.querySelector('small').textContent = `Yandex: ${p.nombre_yandex} · km ${(d / 1000).toFixed(2)}`;
+    cont.querySelector('small').textContent = `${p.nombre_yandex ? 'Yandex: ' + p.nombre_yandex : 'Punto de apoyo: ponle el nombre que usa la gente'} · km ${(d / 1000).toFixed(2)}`;
     cont.querySelector('button').onclick = () => { mapa.closePopup(); alternar(clave, false); aviso('Paradero quitado'); };
     m.bindPopup(cont).on('click', () => marcarFila(clave));
   });

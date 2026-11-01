@@ -3,8 +3,10 @@
 # Compila la app del pasajero y la del conductor contra el servicio en la nube y
 # deja los .apk como artefactos de la ejecución: se descargan desde la pestaña
 # Actions → esta ejecución → Artifacts, y se instalan en el teléfono.
-# Mientras no exista la clave de firma propia (Módulo 5), se firman con la de
-# depuración: sirven para pruebas, no para publicar.
+# Se firman con la clave propia de RutaSur si están los secretos
+# RUTASUR_KEYSTORE_BASE64 y RUTASUR_KEYSTORE_PASSWORD (docs/firma-apk.md). Así cada
+# versión nueva se instala encima de la anterior sin desinstalar. Sin ellos, se
+# firman con la clave de depuración y el resumen lo advierte.
 # ==========================================================
 name: APK
 
@@ -21,6 +23,7 @@ concurrency:
 
 env:
   API_URL: https://rutasur-api.onrender.com
+  RUTASUR_KEYSTORE_PASSWORD: ${{ secrets.RUTASUR_KEYSTORE_PASSWORD }}
 
 jobs:
   apk:
@@ -45,6 +48,17 @@ jobs:
       - name: Dependencias
         run: flutter pub get
 
+      - name: Clave de firma
+        env:
+          ALMACEN_BASE64: ${{ secrets.RUTASUR_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ALMACEN_BASE64" ] || [ -z "$RUTASUR_KEYSTORE_PASSWORD" ]; then
+            echo "::warning::Sin los secretos de la clave propia: los APK se firman con la clave de depuración."
+            exit 0
+          fi
+          echo "$ALMACEN_BASE64" | base64 -d > "$RUNNER_TEMP/rutasur.jks"
+          echo "RUTASUR_KEYSTORE=$RUNNER_TEMP/rutasur.jks" >> "$GITHUB_ENV"
+
       - name: APK del conductor
         run: |
           set -o pipefail
@@ -66,6 +80,20 @@ jobs:
           cp build/app/outputs/flutter-apk/app-conductor-release.apk ../instalables/rutasur-conductor-$VERSION.apk
           cp build/app/outputs/flutter-apk/app-pasajero-release.apk ../instalables/rutasur-pasajero-$VERSION.apk
           ls -la ../instalables
+
+      - name: Comprobar la firma
+        run: |
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          for apk in ../instalables/*.apk; do
+            echo "== $(basename "$apk")"
+            "$APKSIGNER" verify --print-certs "$apk" | grep -E "certificate DN|SHA-256"
+          done | tee firma.txt
+          if grep -q "CN=Android Debug" firma.txt; then
+            echo "### ⚠️ Firmados con la clave de depuración" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### ✅ Firmados con la clave propia de RutaSur" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          sed 's/^/    /' firma.txt >> "$GITHUB_STEP_SUMMARY"
 
       - name: Errores de la compilación
         if: failure()

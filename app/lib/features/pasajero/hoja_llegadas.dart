@@ -16,6 +16,8 @@ Future<void> mostrarLlegadas(
   required RepositorioRutaSur repositorio,
   required ParaderoEnMapa paradero,
   required String horario,
+  bool esFavorito = false,
+  Future<bool> Function()? alAlternarFavorito,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -23,7 +25,13 @@ Future<void> mostrarLlegadas(
     showDragHandle: true,
     builder: (_) => FractionallySizedBox(
       heightFactor: 0.6,
-      child: HojaLlegadas(repositorio: repositorio, paradero: paradero, horario: horario),
+      child: HojaLlegadas(
+        repositorio: repositorio,
+        paradero: paradero,
+        horario: horario,
+        esFavorito: esFavorito,
+        alAlternarFavorito: alAlternarFavorito,
+      ),
     ),
   );
 }
@@ -34,11 +42,17 @@ class HojaLlegadas extends StatefulWidget {
     required this.repositorio,
     required this.paradero,
     required this.horario,
+    this.esFavorito = false,
+    this.alAlternarFavorito,
   });
 
   final RepositorioRutaSur repositorio;
   final ParaderoEnMapa paradero;
   final String horario;
+  final bool esFavorito;
+
+  /// Agrega o quita el paradero de favoritos (RF-007); false si ya hay 10.
+  final Future<bool> Function()? alAlternarFavorito;
 
   @override
   State<HojaLlegadas> createState() => _HojaLlegadasState();
@@ -47,6 +61,19 @@ class HojaLlegadas extends StatefulWidget {
 class _HojaLlegadasState extends State<HojaLlegadas> {
   late final ControladorLlegadas _controlador =
       ControladorLlegadas(widget.repositorio, widget.paradero.codigo);
+  late bool _favorito = widget.esFavorito;
+
+  Future<void> _alternarFavorito() async {
+    final ok = await widget.alAlternarFavorito!();
+    if (!mounted) return;
+    if (ok) {
+      setState(() => _favorito = !_favorito);
+    } else {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(content: Text('Puedes guardar hasta 10 favoritos. Quita uno para agregar otro.')),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -67,45 +94,73 @@ class _HojaLlegadasState extends State<HojaLlegadas> {
       listenable: _controlador,
       builder: (context, _) {
         final c = _controlador;
-        return Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(p.nombre, style: Theme.of(context).textTheme.titleLarge),
-              if (p.referencia != null)
-                Text(p.referencia!, style: const TextStyle(color: ColoresRutaSur.textoSecundario)),
-              const SizedBox(height: 4),
-              Text(
-                'Pasan por aquí: ${p.ramales.map((r) => r.nombre).join(' y ')}',
-                style: const TextStyle(color: ColoresRutaSur.textoSecundario),
+        // Todo en una sola lista desplazable: con la letra del teléfono al 200 % el
+        // encabezado y las llegadas no caben en la hoja y deben poder desplazarse (D-16).
+        return CustomScrollView(
+          slivers: [
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              sliver: SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: Text(p.nombre, style: Theme.of(context).textTheme.titleLarge)),
+                        if (widget.alAlternarFavorito != null)
+                          TextButton.icon(
+                            key: const Key('favorito'),
+                            onPressed: _alternarFavorito,
+                            icon: Icon(
+                              _favorito ? Icons.star : Icons.star_border,
+                              color: ColoresRutaSur.demoradoTexto,
+                            ),
+                            label: Text(_favorito ? 'Favorito' : 'Guardar'),
+                          ),
+                      ],
+                    ),
+                    if (p.referencia != null)
+                      Text(p.referencia!, style: const TextStyle(color: ColoresRutaSur.textoSecundario)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Pasan por aquí: ${p.ramales.map((r) => r.nombre).join(' y ')}',
+                      style: const TextStyle(color: ColoresRutaSur.textoSecundario),
+                    ),
+                    if (c.sinConexion) ...[
+                      const SizedBox(height: 12),
+                      const _AvisoSinConexion(),
+                    ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 12),
-              if (c.sinConexion) ...[
-                const _AvisoSinConexion(),
-                const SizedBox(height: 8),
-              ],
-              Expanded(child: _contenido(c)),
-            ],
-          ),
+            ),
+            _contenido(c),
+          ],
         );
       },
     );
   }
 
   Widget _contenido(ControladorLlegadas c) {
-    if (c.cargando) return const Center(child: CircularProgressIndicator());
-    if (c.error != null) return _MensajeCentrado(texto: c.error!);
+    Widget resto(Widget hijo) => SliverFillRemaining(
+          hasScrollBody: false,
+          child: Padding(padding: const EdgeInsets.fromLTRB(16, 0, 16, 16), child: hijo),
+        );
+    if (c.cargando) return resto(const Center(child: CircularProgressIndicator()));
+    if (c.error != null) return resto(_MensajeCentrado(texto: c.error!));
     if (c.llegadas.isEmpty) {
-      return _MensajeCentrado(
+      return resto(_MensajeCentrado(
         texto: 'No hay unidades que lleguen en los próximos 60 minutos.',
         detalle: 'Horario referencial del servicio: ${widget.horario}.',
-      );
+      ));
     }
-    return ListView.separated(
-      itemCount: c.llegadas.length,
-      separatorBuilder: (context, indice) => const SizedBox(height: 8),
-      itemBuilder: (context, indice) => TarjetaLlegada(llegada: c.llegadas[indice]),
+    return SliverPadding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      sliver: SliverList.separated(
+        itemCount: c.llegadas.length,
+        separatorBuilder: (context, indice) => const SizedBox(height: 8),
+        itemBuilder: (context, indice) => TarjetaLlegada(llegada: c.llegadas[indice]),
+      ),
     );
   }
 }
@@ -129,13 +184,17 @@ class TarjetaLlegada extends StatelessWidget {
               width: 84,
               child: Column(
                 children: [
-                  Text(
-                    minutosEta(l.etaS),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: l.etaS < 60 ? 18 : 34,
-                      fontWeight: FontWeight.w800,
-                      color: ColoresRutaSur.texto,
+                  // Con letra grande el número se achica para no partirse en dos líneas
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      minutosEta(l.etaS),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: l.etaS < 60 ? 18 : 34,
+                        fontWeight: FontWeight.w800,
+                        color: ColoresRutaSur.texto,
+                      ),
                     ),
                   ),
                   const Text('min', style: TextStyle(color: ColoresRutaSur.textoSecundario)),

@@ -10,8 +10,8 @@ crear la base, en la integración continua y, más adelante, en la nube. Los dat
 |---|---|---|
 | Mollebaya → Centro (bajada) | Yandex Maps, ruta «LB Mollebaya» (26/10/2026), coincide en 99 % con el GPX propio | Paradas de Yandex |
 | Centro → Mollebaya (subida) | **GPX propio** trazado en BRouter (`Centro_Mollebaya_2026-10-31.gpx`) | Paradas de Yandex a ≤ 25 m del trazado |
-| Cerrillo → Centro | Yandex Maps, ruta «LB Cerrillos» | Paradas de Yandex |
-| Centro → Cerrillo | Yandex Maps, ruta «LB Cerrillos» | Paradas de Yandex |
+| Cerrillo → Centro | **GPX propio** (BRouter y gpx.studio, `Cerrillo_Centro_2026-11-01.gpx`) | Paradas de Yandex a ≤ 25 m del trazado + puntos de apoyo |
+| Centro → Cerrillo | **GPX propio** (BRouter, `Centro_Cerrillo_2026-11-01.gpx`) | Paradas de Yandex a ≤ 25 m del trazado + puntos de apoyo |
 
 - **Yandex está desactualizado en la subida a Mollebaya.** Iba por Av. Mariscal Castilla,
   María Nieves y Bustamante, Av. Argentina y Av. Kennedy. Hoy la ruta va por el Óvalo de
@@ -19,9 +19,14 @@ crear la base, en la integración continua y, más adelante, en la nube. Los dat
 - **Terminal de Mollebaya («Santa Ana»).** Es el final del GPX de subida, donde la unidad se
   queda y de donde sale de bajada. Yandex seguía unos 100 m más por la Calle La Unión. La
   subida y la bajada comparten este paradero.
-- **Pendiente: ramal Cerrillo.** Hoy sale de Santa Ana, pasa por Yanayaco y llega a Cerrillo,
-  según el chat de la ruta y la información del autor. Yandex todavía lo muestra saliendo de
-  la Calle Grau. Se corregirá con un GPX propio.
+- **Ramal Cerrillo (01/11/2026).** Sale del terminal Santa Ana (el mismo de Mollebaya), pasa
+  por la Plaza de Mollebaya, Yanayaco y Cerrillo, y sigue al Centro por el mismo camino que
+  Mollebaya; de vuelta hace lo inverso. Yandex todavía lo mostraba saliendo de la Calle Grau,
+  por eso se usan los GPX propios. En el tramo nuevo Yandex no tiene paradas: el editor muestra
+  **puntos de apoyo** anaranjados cada 100 m para elegir y nombrar ahí los paraderos.
+- **Paraderos del Cerrillo al cambiar el trazado.** Se conservaron los elegidos antes que siguen
+  sobre el trazado nuevo y se agregaron los de Mollebaya del mismo sentido por donde los dos
+  ramales van juntos (un mismo paradero para ambos).
 - **Nombres de los paraderos.** El autor los eligió y les puso el nombre que usa la gente con
   el editor. La referencia de cada paradero es el cruce de calles que da Yandex, cuando
   aporta algo.
@@ -36,6 +41,7 @@ referencia.
 |---|---|
 | `yandex/T1.txt`, `T0.txt`, `C1.txt`, `C0.txt` | Paradas y trazado de Yandex: Mollebaya ida/vuelta y Cerrillos ida/vuelta |
 | `Centro_Mollebaya_2026-10-31.gpx` | Subida a Mollebaya trazada en BRouter-Web |
+| `Cerrillo_Centro_2026-11-01.gpx`, `Centro_Cerrillo_2026-11-01.gpx` | Ramal Cerrillo en los dos sentidos, trazado por el autor |
 | `yandex/preparar_editor.py` | Une Yandex y el GPX, limpia el GPX, ubica el terminal y preselecciona paraderos (uno cada 300–700 m) |
 | `yandex/editor_paraderos.html` | **Generado.** Editor en el navegador: elegir y nombrar paraderos, y exportar `paraderos.json` |
 | `yandex/datos_editor.json` | **Generado.** Trazados y puntos candidatos; también lo lee el generador SQL |

@@ -10,6 +10,12 @@ y Av. Kennedy). Se reemplaza su trazado por el GPX trazado en BRouter por el aut
 paradas candidatas son las de Yandex (Mollebaya y Cerrillos de vuelta) que quedan a 25 m
 o menos del trazado nuevo, ordenadas a lo largo de él.
 
+Actualización 01/11/2026: el ramal Cerrillo también usa trazados propios en los dos
+sentidos. Ya no sale de la Calle Grau: sale del terminal Santa Ana (el mismo de Mollebaya),
+pasa por Yanayaco y Cerrillo, y sigue al Centro; de vuelta hace lo inverso. Donde Yandex no
+tiene paradas (el tramo nuevo), se agregan puntos de apoyo cada 100 m para que el autor
+marque y nombre los paraderos en el editor.
+
 Salida: datos_editor.json y editor_paraderos.html con, por variante, el trazado, todas las paradas de Yandex y
 una preselección de paraderos principales (cada 300–700 m, priorizando lugares de
 referencia). Los paraderos del tramo común se comparten entre ramales porque Yandex
@@ -79,18 +85,33 @@ def proyectar(p, trazado, acc, desde=0):
     return mejor[1], mejor[0], mejor_d
 
 
-# Variantes cuyo trazado viene de un GPX propio: (archivo GPX, variantes de Yandex
-# de las que se toman paradas candidatas, en orden de preferencia)
+# Variantes cuyo trazado viene de un GPX propio: (archivo GPX, variantes de Yandex del
+# mismo sentido de las que se toman paradas candidatas, origen del trazado)
 TRAZADO_PROPIO = {
-    ("MOLLEBAYA", "VUELTA"): (AQUI.parent / "Centro_Mollebaya_2026-10-31.gpx", ["T0", "C0"]),
+    ("MOLLEBAYA", "VUELTA"): (AQUI.parent / "Centro_Mollebaya_2026-10-31.gpx", ["T0", "C0"],
+                              "GPX propio (BRouter, 31/10/2026)"),
+    ("CERRILLO", "IDA"): (AQUI.parent / "Cerrillo_Centro_2026-11-01.gpx", ["C1", "T1"],
+                          "GPX propio (BRouter y gpx.studio, 01/11/2026)"),
+    ("CERRILLO", "VUELTA"): (AQUI.parent / "Centro_Cerrillo_2026-11-01.gpx", ["C0", "T0"],
+                             "GPX propio (BRouter, 01/11/2026)"),
 }
 # Terminal de Mollebaya: donde termina el GPX de vuelta. El bus se queda ahí y de ahí
 # sale de bajada; Yandex seguía unos 100 m más por la Calle La Unión (confirmado por
 # el autor el 31/10/2026). Ambos sentidos del ramal empiezan o terminan en este punto.
 # En el despacho y en el chat de la ruta este punto se llama «Santa Ana».
-TERMINALES = {"MOLLEBAYA": "Santa Ana"}
+# Desde el 01/11/2026 el ramal Cerrillo sale y llega al mismo terminal: es un solo paradero.
+TERMINALES = {"MOLLEBAYA": "Santa Ana", "CERRILLO": "Santa Ana"}
+GPX_DEL_TERMINAL = AQUI.parent / "Centro_Mollebaya_2026-10-31.gpx"
 RADIO_CANDIDATA_M = 25
 DUPLICADO_M = 8
+# Lo último exportado del editor: de ahí salen los paraderos ya elegidos
+EXPORTADO = AQUI.parent / "paraderos.json"
+# Variantes con trazado nuevo: su preselección sale de lo ya elegido (ver seleccion_renovada)
+RENOVADAS = {("CERRILLO", "IDA"), ("CERRILLO", "VUELTA")}
+CERCA_M = 80
+# Tramos sin paradas de Yandex: puntos de apoyo para elegir paraderos en el editor
+HUECO_M = 400
+PASO_APOYO_M = 100
 
 
 def leer_gpx(ruta):
@@ -124,10 +145,39 @@ def candidatas_sobre(trazado, archivos):
     return sorted(vistas, key=lambda p: p["d_trazado"])
 
 
+def punto_en(trazado, acc, d):
+    """Punto del trazado a d metros del inicio."""
+    for i in range(1, len(trazado)):
+        if acc[i] >= d:
+            t = 0 if acc[i] == acc[i - 1] else (d - acc[i - 1]) / (acc[i] - acc[i - 1])
+            a, b = trazado[i - 1], trazado[i]
+            return (a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1]))
+    return trazado[-1]
+
+
+def con_puntos_de_apoyo(trazado, paradas):
+    """Rellena cada tramo de más de 400 m sin paradas de Yandex con un punto cada 100 m.
+
+    No tienen nombre de Yandex: el autor elige cuáles son paraderos y los nombra.
+    """
+    acc = acumulado(trazado)
+    bordes = [0.0] + [p["d_trazado"] for p in paradas] + [acc[-1]]
+    nuevas = []
+    for a, b in zip(bordes, bordes[1:], strict=False):
+        if b - a <= HUECO_M:
+            continue
+        n = int((b - a) // PASO_APOYO_M)
+        for k in range(1, n):
+            d = a + k * (b - a) / n
+            lon, lat = punto_en(trazado, acc, d)
+            nuevas.append({"nombre": "", "lon": round(lon, 6), "lat": round(lat, 6),
+                           "d_trazado": d, "apoyo": True})
+    return sorted(paradas + nuevas, key=lambda p: p["d_trazado"])
+
+
 def punto_terminal(ramal):
-    """El terminal es el final del GPX de vuelta del ramal."""
-    gpx = TRAZADO_PROPIO[(ramal, "VUELTA")][0]
-    lon, lat = leer_gpx(gpx)[-1]
+    """El terminal es el final del GPX de subida a Mollebaya (compartido por los dos ramales)."""
+    lon, lat = leer_gpx(GPX_DEL_TERMINAL)[-1]
     return {"nombre": TERMINALES[ramal], "lon": round(lon, 6), "lat": round(lat, 6)}
 
 
@@ -146,6 +196,25 @@ def con_terminal(ramal, sentido, trazado, paradas):
             trazado = trazado + [t]
         paradas = [p for p in paradas if dist((p["lon"], p["lat"]), t) > 30] + [dict(terminal)]
     return trazado, paradas, terminal
+
+
+def seleccion_renovada(ramal, sentido, paradas, obligatorias):
+    """Preselección de una variante cuyo trazado cambió, a partir de lo ya exportado.
+
+    Se conservan sus paraderos que siguen sobre el trazado y se agregan los de Mollebaya
+    del mismo sentido que también quedan sobre él (donde los dos ramales van por el mismo
+    camino). Si uno propio está a menos de 80 m de uno de Mollebaya, queda el de
+    Mollebaya, que es el compartido.
+    """
+    if not EXPORTADO.exists():
+        return None
+    elegidos = {v["id"]: set(v["paraderos"]) for v in json.loads(EXPORTADO.read_text(encoding="utf-8"))["variantes"]}
+    d = {p["clave"]: p["d"] for p in paradas}
+    propios = elegidos.get(f"{ramal}-{sentido}", set()) & d.keys()
+    compartidos = elegidos.get(f"MOLLEBAYA-{sentido}", set()) & d.keys()
+    propios = {k for k in propios if k in compartidos or all(abs(d[k] - d[m]) >= CERCA_M for m in compartidos)}
+    marcadas = propios | compartidos | set(obligatorias)
+    return {i for i, p in enumerate(paradas) if p["clave"] in marcadas}
 
 
 def puntaje(nombre):
@@ -205,7 +274,7 @@ def main():
         propio = TRAZADO_PROPIO.get((ramal, sentido))
         if propio:
             trazado = leer_gpx(propio[0])
-            paradas = candidatas_sobre(trazado, propio[1])
+            paradas = con_puntos_de_apoyo(trazado, candidatas_sobre(trazado, propio[1]))
         else:
             paradas, trazado = leer(archivo)
         obligatorias = []
@@ -224,14 +293,21 @@ def main():
             anterior = p
         forzadas = (seleccion_por_sentido[sentido] if ramal == "CERRILLO" else set()) | set(obligatorias)
         elegidas = seleccionar(paradas, forzadas)
+        # Los puntos de apoyo no se preseleccionan: el autor sabe dónde para el bus
+        elegidas = {i for i in elegidas if not paradas[i].get("apoyo")} | {
+            i for i, p in enumerate(paradas) if p["clave"] in forzadas}
+        if (ramal, sentido) in RENOVADAS:
+            elegidas = seleccion_renovada(ramal, sentido, paradas, obligatorias) or elegidas
         seleccion_por_sentido[sentido] |= {paradas[i]["clave"] for i in elegidas}
         for p in paradas:
+            sugerido = (f"Sin nombre (km {p['d'] / 1000:.1f})".replace(".", ",")
+                        if p.get("apoyo") else nombre_sugerido(p["nombre"]))
             salida["paradas"].setdefault(p["clave"], {
-                "nombre_yandex": p["nombre"], "nombre": nombre_sugerido(p["nombre"]),
+                "nombre_yandex": p["nombre"], "nombre": sugerido,
                 "lon": p["lon"], "lat": p["lat"]})
         salida["variantes"].append({
             "id": f"{ramal}-{sentido}",
-            "fuente_trazado": "GPX propio (BRouter, 31/10/2026)" if propio else "Yandex Maps", "ramal": ramal, "sentido": sentido, "destino": destino,
+            "fuente_trazado": propio[2] if propio else "Yandex Maps", "ramal": ramal, "sentido": sentido, "destino": destino,
             "longitud_m": round(acc[-1]),
             "trazado": [[round(x, 6), round(y, 6)] for x, y in trazado],
             "paradas": [[p["clave"], round(p["d"])] for p in paradas],
@@ -239,7 +315,8 @@ def main():
             "obligatorias": obligatorias,
         })
         print(f"{ramal:9} {sentido:6} {acc[-1] / 1000:5.1f} km  paradas Yandex={len(paradas):3}  "
-              f"preseleccionadas={len(elegidas):2}  máx. desvío={max(p['off'] for p in paradas):.0f} m")
+              f"preseleccionadas={len(elegidas):2}  máx. desvío={max(p['off'] for p in paradas):.0f} m  "
+              f"puntos de apoyo={sum(1 for p in paradas if p.get('apoyo'))}")
     datos = json.dumps(salida, ensure_ascii=False)
     (AQUI / "datos_editor.json").write_text(datos, encoding="utf-8")
     plantilla = (AQUI / "plantilla_editor.html").read_text(encoding="utf-8")
