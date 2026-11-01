@@ -132,5 +132,8 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
       - name: Pruebas unitarias y de widgets
-        # Reportero de GitHub: cada prueba fallida queda como anotación del PR
-        run: flutter test --reporter github
+        run: flutter test --reporter json > resultados-flutter.json
+
+      - name: Detalle de las pruebas fallidas
+        if: failure()
+        run: python3 ../.github/scripts/fallas_flutter.py resultados-flutter.json
