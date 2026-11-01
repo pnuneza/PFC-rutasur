@@ -8,15 +8,12 @@ import 'package:flutter/material.dart';
 
 import '../../core/tema.dart';
 import '../../domain/modelos.dart';
+import '../pasajero/formato.dart';
 import 'controlador_conductor.dart';
 
 /// Destino que verán los pasajeros, igual que el que devuelve el servidor.
 String destinoDe(Ramal ramal, Sentido sentido) =>
     sentido == Sentido.ida ? 'Centro (2 de Mayo)' : ramal.nombre;
-
-String textoSentido(Ramal? ramal, Sentido sentido) => sentido == Sentido.ida
-    ? 'Bajada · hacia el Centro'
-    : 'Subida · hacia ${ramal?.nombre ?? 'el ramal'}';
 
 class PantallaRecorrido extends StatefulWidget {
   const PantallaRecorrido({super.key, required this.controlador});

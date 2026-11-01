@@ -5,6 +5,7 @@
 library;
 
 import 'modelos.dart';
+import 'pasajero.dart';
 
 abstract interface class RepositorioRutaSur {
   /// Línea LB con sus variantes, trazados y paraderos (GET /routes/lb).
@@ -15,6 +16,9 @@ abstract interface class RepositorioRutaSur {
 
   /// Próximas llegadas a un paradero, ordenadas por ETA (GET /stops/{codigo}/arrivals).
   Future<List<Llegada>> llegadas(String codigoParadero);
+
+  /// Hasta 20 paraderos cuyo nombre contiene el texto, sin mayúsculas ni tildes (GET /stops?q=).
+  Future<List<ParaderoEncontrado>> buscarParaderos(String texto);
 }
 
 /// El teléfono no pudo comunicarse con el servicio.

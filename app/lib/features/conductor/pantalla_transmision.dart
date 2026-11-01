@@ -8,8 +8,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/tema.dart';
+import '../pasajero/formato.dart';
 import 'controlador_conductor.dart';
-import 'pantalla_recorrido.dart';
 
 class PantallaTransmision extends StatefulWidget {
   const PantallaTransmision({super.key, required this.controlador, DateTime Function()? reloj})

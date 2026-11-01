@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 
 import '../core/config.dart';
 import '../domain/modelos.dart';
+import '../domain/pasajero.dart';
 import '../domain/repositorio.dart';
 
 class ApiRutaSur implements RepositorioRutaSur {
@@ -33,6 +34,12 @@ class ApiRutaSur implements RepositorioRutaSur {
         for (final l in await _obtener('/stops/${Uri.encodeComponent(codigoParadero)}/arrivals')
             as List<dynamic>)
           Llegada.fromJson(l as Map<String, dynamic>),
+      ];
+
+  @override
+  Future<List<ParaderoEncontrado>> buscarParaderos(String texto) async => [
+        for (final p in await _obtener('/stops?q=${Uri.encodeQueryComponent(texto)}') as List<dynamic>)
+          ParaderoEncontrado.fromJson(p as Map<String, dynamic>),
       ];
 
   /// Hace la petición y devuelve el contenido de `data` (sobre estándar de P05, Tabla 38).

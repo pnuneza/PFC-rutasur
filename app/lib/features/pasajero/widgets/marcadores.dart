@@ -74,37 +74,45 @@ class MarcadorUnidad extends StatelessWidget {
         onTap: alTocar,
         child: Opacity(
           opacity: apagada ? 0.45 : 1,
-          child: Column(
+          // Stack y no Column: con letra grande en el teléfono la etiqueta puede crecer
+          // sin desbordar el marcador ni mover la flecha del centro (D-15).
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
             children: [
-              const SizedBox(height: (alto - _diametro) / 2),
-              Container(
-                width: _diametro,
-                height: _diametro,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 3),
-                  boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black26)],
-                ),
-                child: Transform.rotate(
-                  angle: (unidad.rumbo ?? 0) * pi / 180,
-                  child: const Icon(Icons.navigation, color: Colors.white, size: 20),
+              Positioned(
+                top: (alto - _diametro) / 2,
+                child: Container(
+                  width: _diametro,
+                  height: _diametro,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 3),
+                    boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black26)],
+                  ),
+                  child: Transform.rotate(
+                    angle: (unidad.rumbo ?? 0) * pi / 180,
+                    child: const Icon(Icons.navigation, color: Colors.white, size: 20),
+                  ),
                 ),
               ),
-              const SizedBox(height: 2),
-              Container(
-                constraints: const BoxConstraints(maxWidth: ancho),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: color),
-                ),
-                child: Text(
-                  '${unidad.etiqueta} → ${unidad.destino}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w700),
+              Positioned(
+                top: (alto + _diametro) / 2 + 2,
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: ancho),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: color),
+                  ),
+                  child: Text(
+                    '${unidad.etiqueta} → ${unidad.destino}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w700),
+                  ),
                 ),
               ),
             ],

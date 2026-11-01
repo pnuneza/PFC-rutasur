@@ -19,6 +19,9 @@ class MapaRuta extends StatelessWidget {
     required this.atenuarUnidades,
     required this.alTocarParadero,
     required this.alTocarUnidad,
+    this.ubicacionUsuario,
+    this.controlador,
+    this.mostrarTeselas = true,
   });
 
   final Linea linea;
@@ -28,6 +31,15 @@ class MapaRuta extends StatelessWidget {
   final ValueChanged<ParaderoEnMapa> alTocarParadero;
   final ValueChanged<UnidadActiva> alTocarUnidad;
 
+  /// Punto azul del pasajero (RF-006); solo se dibuja, nunca se envía.
+  final LatLng? ubicacionUsuario;
+
+  /// Para centrar el mapa en el pasajero con «Mi ubicación».
+  final MapController? controlador;
+
+  /// Fondo de OpenStreetMap; las pruebas lo omiten porque no tienen internet.
+  final bool mostrarTeselas;
+
   @override
   Widget build(BuildContext context) {
     final puntos = [for (final v in linea.variantes) ...v.trazado];
@@ -35,7 +47,11 @@ class MapaRuta extends StatelessWidget {
     final comun = tramoComun(linea);
 
     return FlutterMap(
+      mapController: controlador,
       options: MapOptions(
+        // Con un controlador externo («Mi ubicación») la cámara inicial debe caer dentro
+        // del corredor desde el principio; si no, flutter_map la rechaza (D-14).
+        initialCenter: limites.center,
         initialCameraFit: CameraFit.bounds(
           bounds: limites,
           padding: const EdgeInsets.fromLTRB(32, 96, 32, 140),
@@ -49,10 +65,11 @@ class MapaRuta extends StatelessWidget {
         ),
       ),
       children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'pe.edu.ucsm.rutasur',
-        ),
+        if (mostrarTeselas)
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'pe.edu.ucsm.rutasur',
+          ),
         PolylineLayer(
           polylines: [
             // Cada variante con el color de su ramal...
@@ -81,6 +98,27 @@ class MapaRuta extends StatelessWidget {
               ),
           ],
         ),
+        if (ubicacionUsuario != null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: ubicacionUsuario!,
+                width: 24,
+                height: 24,
+                child: Semantics(
+                  label: 'Tu ubicación',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A73E8),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black26)],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         MarkerLayer(
           markers: [
             for (final unidad in unidades)
@@ -97,7 +135,8 @@ class MapaRuta extends StatelessWidget {
           ],
         ),
         // Atribución obligatoria por la política de uso de OpenStreetMap
-        SimpleAttributionWidget(source: const Text('OpenStreetMap contributors')),
+        // El crédito acompaña al fondo de OpenStreetMap
+        if (mostrarTeselas) SimpleAttributionWidget(source: const Text('OpenStreetMap contributors')),
       ],
     );
   }

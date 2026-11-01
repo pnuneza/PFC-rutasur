@@ -1,0 +1,6 @@
+<!-- Solo la app del pasajero: ubicación mientras se usa la app, para proponer el
+     paradero más cercano (RF-006). Nunca en segundo plano y nunca sale del teléfono. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+</manifest>

@@ -1,5 +1,6 @@
 import 'package:latlong2/latlong.dart';
 import 'package:rutasur/domain/modelos.dart';
+import 'package:rutasur/domain/pasajero.dart';
 import 'package:rutasur/domain/repositorio.dart';
 
 /// Repositorio falso: responde lo que la prueba le indica, sin red.
@@ -31,6 +32,27 @@ class RepositorioFalso implements RepositorioRutaSur {
   Future<List<Llegada>> llegadas(String codigoParadero) async {
     if (fallo != null) throw fallo!;
     return llegadasPorParadero[codigoParadero] ?? const [];
+  }
+
+  /// Búsquedas recibidas, para comprobar que no se consulta con menos de 2 letras.
+  final List<String> busquedas = [];
+
+  @override
+  Future<List<ParaderoEncontrado>> buscarParaderos(String texto) async {
+    busquedas.add(texto);
+    if (fallo != null) throw fallo!;
+    final buscado = texto.trim().toLowerCase();
+    return [
+      for (final p in paraderosUnicos(linea ?? lineaDePrueba()))
+        if (p.nombre.toLowerCase().contains(buscado))
+          ParaderoEncontrado(
+            codigo: p.codigo,
+            nombre: p.nombre,
+            referencia: p.referencia,
+            ubicacion: p.ubicacion,
+            ramales: p.ramales,
+          ),
+    ];
   }
 }
 
@@ -89,3 +111,39 @@ UnidadActiva unidadDePrueba({String etiqueta = '07', int antiguedadS = 10}) => U
       rumbo: 180,
       antiguedadS: antiguedadS,
     );
+
+
+class PreferenciasEnMemoria implements PreferenciasPasajero {
+  bool vista = false;
+  List<String> codigos = [];
+
+  @override
+  Future<bool> bienvenidaVista() async => vista;
+  @override
+  Future<void> marcarBienvenidaVista() async => vista = true;
+  @override
+  Future<List<String>> favoritos() async => List.of(codigos);
+  @override
+  Future<void> guardarFavoritos(List<String> c) async => codigos = List.of(c);
+}
+
+class UbicacionFalsa implements UbicacionPasajero {
+  UbicacionFalsa({this.concedido = false, this.posicion, this.concederAlPedir = true});
+
+  bool concedido;
+  bool concederAlPedir;
+  LatLng? posicion;
+  int pedidos = 0;
+
+  @override
+  Future<bool> permisoConcedido() async => concedido;
+  @override
+  Future<bool> pedirPermiso() async {
+    pedidos++;
+    concedido = concederAlPedir;
+    return concedido;
+  }
+
+  @override
+  Future<LatLng?> posicionActual() async => concedido ? posicion : null;
+}
