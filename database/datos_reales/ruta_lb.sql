@@ -55,41 +55,37 @@ INSERT INTO paradero (codigo, nombre, referencia, ubicacion, en_tramo_comun, pri
   ('stp_009', 'Calle Moquegua con Calle Mariscal Castilla', 'Calle Moquegua y Calle Mariscal Castilla', ST_SetSRID(ST_MakePoint(-71.482784, -16.470673), 4326), false, false, true),
   ('stp_010', 'Plaza de Characato (Calle Yumina)', 'Calle Yumina y Plaza de Characato', ST_SetSRID(ST_MakePoint(-71.483677, -16.468995), 4326), true, true, true),
   ('stp_011', 'Restaurante La Guardiana (Av. Arequipa)', 'Avenida Arequipa y Restaurante La Guardiana', ST_SetSRID(ST_MakePoint(-71.487669, -16.465224), 4326), true, false, true),
-  ('stp_012', 'Cruce de Characato', 'Avenida Arequipa y Urb. San Francisco', ST_SetSRID(ST_MakePoint(-71.492114, -16.464107), 4326), true, true, true),
   ('stp_013', 'Avenida Characato', 'Avenida Characato y Urb. San Francisco', ST_SetSRID(ST_MakePoint(-71.491877, -16.462302), 4326), true, false, true),
   ('stp_014', 'Carr. a Sabandía con Vía a Buenavista', 'Carretera a Sabandía y Vía a Buenavista', ST_SetSRID(ST_MakePoint(-71.49203, -16.459426), 4326), true, false, true),
   ('stp_015', 'Plaza de Sabandía', 'Carretera a Sabandía y Municipalidad de Sabandía', ST_SetSRID(ST_MakePoint(-71.49415, -16.457081), 4326), true, true, true),
   ('stp_016', 'Restaurante Toritos de Sabandía (Carr. a Sabandía)', 'Carretera a Sabandía y Restaurante Toritos de Sabandía', ST_SetSRID(ST_MakePoint(-71.495633, -16.452613), 4326), true, false, true),
   ('stp_017', 'Quinta Nizza (Carr. a Sabandía)', 'Carretera a Sabandía y Quinta Nizza', ST_SetSRID(ST_MakePoint(-71.497318, -16.449296), 4326), true, false, true),
   ('stp_018', 'Puente Sabandía (Carr. a Sabandía)', 'Carretera a Sabandía y Puente Sabandía', ST_SetSRID(ST_MakePoint(-71.500346, -16.447056), 4326), true, false, true),
-  ('stp_019', 'Grifo Santa Fe (Carr. a Sabandía)', 'Carretera a Sabandía y Grifo Santa Fe', ST_SetSRID(ST_MakePoint(-71.504245, -16.444922), 4326), true, false, true),
+  ('stp_019', 'Grifo Santa Fe (Carr. a Sabandía)', 'Carretera a Sabandía y Grifo Santa Fe', ST_SetSRID(ST_MakePoint(-71.504245, -16.444922), 4326), true, true, true),
   ('stp_020', 'Calle Colón', NULL, ST_SetSRID(ST_MakePoint(-71.504315, -16.442112), 4326), true, false, true),
   ('stp_021', 'Calle Colón', NULL, ST_SetSRID(ST_MakePoint(-71.506471, -16.438944), 4326), true, false, true),
   ('stp_022', 'Calle Colón', NULL, ST_SetSRID(ST_MakePoint(-71.508058, -16.435055), 4326), true, false, true),
   ('stp_023', 'Av. Colón', NULL, ST_SetSRID(ST_MakePoint(-71.510897, -16.432682), 4326), true, false, true),
   ('stp_024', 'Av. Pizarro', NULL, ST_SetSRID(ST_MakePoint(-71.513251, -16.428934), 4326), true, false, true),
-  ('stp_025', 'Av. Pizarro con Alberto Laveau', 'Avenida Pizarro y Alberto Laveau', ST_SetSRID(ST_MakePoint(-71.515719, -16.424095), 4326), true, false, true),
   ('stp_026', 'Av. Lambramani con Av. Pizarro con Av. Porongoche', 'Avenida Lambramani y Avenida Pizarro y Avenida Porongoche', ST_SetSRID(ST_MakePoint(-71.516611, -16.420297), 4326), true, false, true),
-  ('stp_027', 'Av. Porongoche con Calle Internacional con Circunvalación', 'Avenida Porongoche y Calle Internacional y Circunvalación', ST_SetSRID(ST_MakePoint(-71.515393, -16.415905), 4326), true, false, true),
+  ('stp_027', 'Tottus (Av. Porongoche)', 'Avenida Porongoche y Calle Internacional y Circunvalación', ST_SetSRID(ST_MakePoint(-71.515393, -16.415905), 4326), true, true, true),
   ('stp_028', 'Parque César Vallejo (Calle 1 de Mayo)', 'Calle 1 de Mayo y Parque César Vallejo', ST_SetSRID(ST_MakePoint(-71.513054, -16.41477), 4326), true, false, true),
-  ('stp_029', 'Politécnico Rafael Loayza (Av. Jesús)', 'Avenida Jesús y Politécnico Rafael Loayza', ST_SetSRID(ST_MakePoint(-71.513379, -16.410259), 4326), true, false, true),
+  ('stp_029', 'Politécnico Rafael Loayza (Av. Jesús)', 'Avenida Jesús y Politécnico Rafael Loayza', ST_SetSRID(ST_MakePoint(-71.513379, -16.410259), 4326), true, true, true),
   ('stp_030', 'Av. Jesús con Av. Simón Bolívar', 'Avenida Jesús y Avenida Simón Bolívar', ST_SetSRID(ST_MakePoint(-71.514901, -16.406629), 4326), true, false, true),
   ('stp_031', 'Óvalo Mariscal Castilla (Av. Mariscal Castilla)', 'Avenida Mariscal Castilla y Óvalo Mariscal Castilla', ST_SetSRID(ST_MakePoint(-71.515872, -16.40315), 4326), true, true, true),
   ('stp_032', 'Av. Mariscal Castilla con Calle Teniente Rodríguez', 'Avenida Mariscal Castilla y Calle Teniente Rodríguez', ST_SetSRID(ST_MakePoint(-71.519125, -16.401), 4326), true, false, true),
-  ('stp_033', 'Av. Independencia con Av. Mariscal Castilla', 'Avenida Independencia y Avenida Mariscal Castilla', ST_SetSRID(ST_MakePoint(-71.521754, -16.399671), 4326), true, false, true),
   ('stp_034', 'UNSA Puerta 1 (Av. Independencia)', 'Avenida Independencia y UNSA Puerta 1', ST_SetSRID(ST_MakePoint(-71.525015, -16.402369), 4326), true, true, true),
   ('stp_035', 'Coliseo Arequipa (Av. Independencia)', 'Avenida Independencia y Coliseo Arequipa', ST_SetSRID(ST_MakePoint(-71.528873, -16.405515), 4326), true, false, true),
-  ('stp_036', 'Av. Jorge Chávez', NULL, ST_SetSRID(ST_MakePoint(-71.532493, -16.404983), 4326), true, true, true),
-  ('stp_037', 'Av. Jorge Chávez con Calle Víctor Lira', 'Avenida Jorge Chávez y Calle Víctor Lira', ST_SetSRID(ST_MakePoint(-71.532317, -16.404855), 4326), true, true, true),
+  ('stp_036', 'Víctor Lira', 'Avenida Jorge Chávez', ST_SetSRID(ST_MakePoint(-71.532493, -16.404983), 4326), true, true, true),
+  ('stp_037', 'Víctor Lira', 'Avenida Jorge Chávez y Calle Víctor Lira', ST_SetSRID(ST_MakePoint(-71.532317, -16.404855), 4326), true, true, true),
   ('stp_038', 'Parque César Vallejo (Av. Independencia)', 'Avenida Independencia y Parque César Vallejo', ST_SetSRID(ST_MakePoint(-71.526948, -16.403939), 4326), true, false, true),
   ('stp_039', 'Grifo Pecsa Mariscal Castilla (Av. Mariscal Castilla)', 'Avenida Mariscal Castilla y Grifo Pecsa Mariscal Castilla', ST_SetSRID(ST_MakePoint(-71.521032, -16.399876), 4326), true, false, true),
   ('stp_040', 'Óvalo Mariscal Castilla (Av. Mariscal Castilla)', 'Avenida Mariscal Castilla y Óvalo Mariscal Castilla', ST_SetSRID(ST_MakePoint(-71.516743, -16.402755), 4326), true, true, true),
   ('stp_041', 'Grifo El Chasqui (Av. Jesús)', 'Avenida Jesús y Grifo El Chasqui', ST_SetSRID(ST_MakePoint(-71.514794, -16.407177), 4326), true, false, true),
   ('stp_042', 'Av. Jesús con Av. Porongoche', 'Avenida Jesús y Avenida Porongoche', ST_SetSRID(ST_MakePoint(-71.513086, -16.411196), 4326), true, false, true),
-  ('stp_043', 'Av. Porongoche con Calle Lope de Vega', 'Avenida Porongoche y Calle Lope de Vega', ST_SetSRID(ST_MakePoint(-71.514903, -16.415006), 4326), true, false, true),
   ('stp_044', 'Av. Porongoche con Porongoche', 'Avenida Porongoche y Porongoche', ST_SetSRID(ST_MakePoint(-71.515861, -16.417849), 4326), true, false, true),
   ('stp_045', 'Av. Pizarro', NULL, ST_SetSRID(ST_MakePoint(-71.516449, -16.4216), 4326), true, false, true),
-  ('stp_046', 'Av. Pizarro', NULL, ST_SetSRID(ST_MakePoint(-71.515181, -16.425252), 4326), true, false, true),
+  ('stp_046', 'Reservorio de Guardia Civil', 'Avenida Pizarro', ST_SetSRID(ST_MakePoint(-71.515181, -16.425252), 4326), true, true, true),
   ('stp_047', 'Av. Pizarro', NULL, ST_SetSRID(ST_MakePoint(-71.513392, -16.428853), 4326), true, false, true),
   ('stp_048', 'Av. Colón', NULL, ST_SetSRID(ST_MakePoint(-71.511186, -16.432359), 4326), true, false, true),
   ('stp_049', 'Calle Colón', NULL, ST_SetSRID(ST_MakePoint(-71.508203, -16.434878), 4326), true, false, true),
@@ -104,12 +100,11 @@ INSERT INTO paradero (codigo, nombre, referencia, ubicacion, en_tramo_comun, pri
   ('stp_058', 'Carr. Moquegua', NULL, ST_SetSRID(ST_MakePoint(-71.479303, -16.47253), 4326), false, false, true),
   ('stp_059', 'Carr. Moquegua', NULL, ST_SetSRID(ST_MakePoint(-71.476142, -16.475258), 4326), false, false, true),
   ('stp_060', 'Carr. Moquegua', NULL, ST_SetSRID(ST_MakePoint(-71.473266, -16.478269), 4326), false, false, true),
-  ('stp_061', 'Carr. Moquegua', NULL, ST_SetSRID(ST_MakePoint(-71.470789, -16.481331), 4326), true, false, true),
+  ('stp_061', 'Don Abdón', 'Carretera Moquegua', ST_SetSRID(ST_MakePoint(-71.470789, -16.481331), 4326), true, true, true),
   ('stp_062', 'Carr. Moquegua', NULL, ST_SetSRID(ST_MakePoint(-71.467421, -16.483599), 4326), true, false, true),
-  ('stp_063', 'Calle Nueva', NULL, ST_SetSRID(ST_MakePoint(-71.466627, -16.486212), 4326), true, false, true),
   ('stp_064', 'Calle La Unión', NULL, ST_SetSRID(ST_MakePoint(-71.469453, -16.487026), 4326), true, false, true),
   ('stp_065', 'Calle Grau', NULL, ST_SetSRID(ST_MakePoint(-71.464481, -16.473653), 4326), false, false, true),
-  ('stp_066', 'Calle Grau', NULL, ST_SetSRID(ST_MakePoint(-71.467992, -16.472459), 4326), false, false, true),
+  ('stp_066', 'Cerrillo', 'Calle Grau', ST_SetSRID(ST_MakePoint(-71.467992, -16.472459), 4326), false, true, true),
   ('stp_067', 'Calle Grau', NULL, ST_SetSRID(ST_MakePoint(-71.472119, -16.471016), 4326), false, false, true),
   ('stp_068', 'Calle Grau', NULL, ST_SetSRID(ST_MakePoint(-71.476861, -16.470237), 4326), false, false, true),
   ('stp_069', 'Calle Grau', NULL, ST_SetSRID(ST_MakePoint(-71.48115, -16.469151), 4326), false, false, true),
@@ -117,7 +112,6 @@ INSERT INTO paradero (codigo, nombre, referencia, ubicacion, en_tramo_comun, pri
   ('stp_079', 'Colegio Mariano Melgar (Av. Jesús)', 'Avenida Jesús y Colegio Mariano Melgar', ST_SetSRID(ST_MakePoint(-71.513821, -16.409418), 4326), false, false, true),
   ('stp_080', 'Av. Porongoche con Mariátegui', 'Avenida Porongoche y Mariátegui', ST_SetSRID(ST_MakePoint(-71.513741, -16.413018), 4326), false, false, true),
   ('stp_081', 'Av. Porongoche', NULL, ST_SetSRID(ST_MakePoint(-71.516415, -16.419701), 4326), false, false, true),
-  ('stp_082', 'Av. Pizarro', NULL, ST_SetSRID(ST_MakePoint(-71.515951, -16.423441), 4326), false, false, true),
   ('stp_083', 'Av. Pizarro', NULL, ST_SetSRID(ST_MakePoint(-71.514154, -16.42726), 4326), false, false, true),
   ('stp_084', 'Av. Colón', NULL, ST_SetSRID(ST_MakePoint(-71.512201, -16.430757), 4326), false, false, true),
   ('stp_085', 'Calle Colón', NULL, ST_SetSRID(ST_MakePoint(-71.510061, -16.434266), 4326), false, false, true),
@@ -127,7 +121,21 @@ INSERT INTO paradero (codigo, nombre, referencia, ubicacion, en_tramo_comun, pri
   ('stp_089', 'Calle Grau', NULL, ST_SetSRID(ST_MakePoint(-71.479776, -16.469038), 4326), false, false, true),
   ('stp_090', 'Calle Grau', NULL, ST_SetSRID(ST_MakePoint(-71.475654, -16.470419), 4326), false, false, true),
   ('stp_091', 'Calle Grau', NULL, ST_SetSRID(ST_MakePoint(-71.471504, -16.471343), 4326), false, false, true),
-  ('stp_092', 'Calle Grau', NULL, ST_SetSRID(ST_MakePoint(-71.467719, -16.472313), 4326), false, false, true)
+  ('stp_092', 'Cerrillo', 'Calle Grau', ST_SetSRID(ST_MakePoint(-71.467719, -16.472313), 4326), false, true, true),
+  ('stp_093', 'Don Abdón', 'Carretera Moquegua', ST_SetSRID(ST_MakePoint(-71.471275, -16.480432), 4326), true, true, true),
+  ('stp_094', 'La Huaylla', 'Carretera Moquegua', ST_SetSRID(ST_MakePoint(-71.477554, -16.474229), 4326), false, false, true),
+  ('stp_095', 'Cruce de Characato (Av. Characato)', 'Avenida Characato y Cruce de Characato', ST_SetSRID(ST_MakePoint(-71.493273, -16.46431), 4326), true, true, true),
+  ('stp_096', 'Reservorio de Guardia Civil', 'Avenida Pizarro', ST_SetSRID(ST_MakePoint(-71.514838, -16.425778), 4326), true, true, true),
+  ('stp_097', 'Colegio PNP Neptali Valderrama Ampuero', 'Avenida Pizarro', ST_SetSRID(ST_MakePoint(-71.516067, -16.423159), 4326), true, false, true),
+  ('stp_098', 'Mall Aventura Plaza (Av. Porongoche)', 'Avenida Porongoche', ST_SetSRID(ST_MakePoint(-71.515746, -16.41734), 4326), true, true, true),
+  ('stp_099', 'Calle 1 de Mayo con Av. Kennedy', 'Calle 1 de Mayo y Avenida Kennedy', ST_SetSRID(ST_MakePoint(-71.511637, -16.414304), 4326), true, true, true),
+  ('stp_100', 'Feria del Altiplano (Av. Venezuela)', 'Avenida Mariscal Castilla y Avenida Venezuela', ST_SetSRID(ST_MakePoint(-71.517332, -16.402228), 4326), true, true, true),
+  ('stp_101', 'Av. Mariscal Castilla con Av. Independencia', 'Avenida Mariscal Castilla y Avenida Independencia', ST_SetSRID(ST_MakePoint(-71.52151, -16.399459), 4326), true, true, true),
+  ('stp_102', 'Goyeneche', NULL, ST_SetSRID(ST_MakePoint(-71.528983, -16.402956), 4326), false, false, true),
+  ('stp_103', 'Plaza de Mollebaya', 'Calle 27 de Mayo', ST_SetSRID(ST_MakePoint(-71.466622, -16.48716), 4326), true, true, true),
+  ('stp_104', 'Yanayaco', NULL, ST_SetSRID(ST_MakePoint(-71.458482, -16.480134), 4326), false, true, true),
+  ('stp_105', 'Goyeneche', NULL, ST_SetSRID(ST_MakePoint(-71.529447, -16.402513), 4326), false, false, true),
+  ('stp_106', 'Yanayaco', NULL, ST_SetSRID(ST_MakePoint(-71.458483, -16.480134), 4326), false, true, true)
 ON CONFLICT (codigo) DO UPDATE
    SET nombre = EXCLUDED.nombre, referencia = EXCLUDED.referencia,
        ubicacion = EXCLUDED.ubicacion, en_tramo_comun = EXCLUDED.en_tramo_comun,
@@ -135,7 +143,7 @@ ON CONFLICT (codigo) DO UPDATE
 
 -- Los paraderos que ya no se usan (por ejemplo, los demo) quedan inactivos, no se borran
 UPDATE paradero p SET activo = false
- WHERE p.codigo <> ALL (ARRAY['stp_001', 'stp_002', 'stp_003', 'stp_004', 'stp_005', 'stp_006', 'stp_007', 'stp_008', 'stp_009', 'stp_010', 'stp_011', 'stp_012', 'stp_013', 'stp_014', 'stp_015', 'stp_016', 'stp_017', 'stp_018', 'stp_019', 'stp_020', 'stp_021', 'stp_022', 'stp_023', 'stp_024', 'stp_025', 'stp_026', 'stp_027', 'stp_028', 'stp_029', 'stp_030', 'stp_031', 'stp_032', 'stp_033', 'stp_034', 'stp_035', 'stp_036', 'stp_037', 'stp_038', 'stp_039', 'stp_040', 'stp_041', 'stp_042', 'stp_043', 'stp_044', 'stp_045', 'stp_046', 'stp_047', 'stp_048', 'stp_049', 'stp_050', 'stp_051', 'stp_052', 'stp_053', 'stp_054', 'stp_055', 'stp_056', 'stp_057', 'stp_058', 'stp_059', 'stp_060', 'stp_061', 'stp_062', 'stp_063', 'stp_064', 'stp_065', 'stp_066', 'stp_067', 'stp_068', 'stp_069', 'stp_078', 'stp_079', 'stp_080', 'stp_081', 'stp_082', 'stp_083', 'stp_084', 'stp_085', 'stp_086', 'stp_087', 'stp_088', 'stp_089', 'stp_090', 'stp_091', 'stp_092'])
+ WHERE p.codigo <> ALL (ARRAY['stp_001', 'stp_002', 'stp_003', 'stp_004', 'stp_005', 'stp_006', 'stp_007', 'stp_008', 'stp_009', 'stp_010', 'stp_011', 'stp_013', 'stp_014', 'stp_015', 'stp_016', 'stp_017', 'stp_018', 'stp_019', 'stp_020', 'stp_021', 'stp_022', 'stp_023', 'stp_024', 'stp_026', 'stp_027', 'stp_028', 'stp_029', 'stp_030', 'stp_031', 'stp_032', 'stp_034', 'stp_035', 'stp_036', 'stp_037', 'stp_038', 'stp_039', 'stp_040', 'stp_041', 'stp_042', 'stp_044', 'stp_045', 'stp_046', 'stp_047', 'stp_048', 'stp_049', 'stp_050', 'stp_051', 'stp_052', 'stp_053', 'stp_054', 'stp_055', 'stp_056', 'stp_057', 'stp_058', 'stp_059', 'stp_060', 'stp_061', 'stp_062', 'stp_064', 'stp_065', 'stp_066', 'stp_067', 'stp_068', 'stp_069', 'stp_078', 'stp_079', 'stp_080', 'stp_081', 'stp_083', 'stp_084', 'stp_085', 'stp_086', 'stp_087', 'stp_088', 'stp_089', 'stp_090', 'stp_091', 'stp_092', 'stp_093', 'stp_094', 'stp_095', 'stp_096', 'stp_097', 'stp_098', 'stp_099', 'stp_100', 'stp_101', 'stp_102', 'stp_103', 'stp_104', 'stp_105', 'stp_106'])
    AND NOT EXISTS (SELECT 1 FROM paradero_variante pv WHERE pv.paradero_id = p.id);
 
 -- 4. Paraderos de cada variante. El orden y la distancia los calcula la base
@@ -143,7 +151,7 @@ UPDATE paradero p SET activo = false
 DO $$
 DECLARE
     v_id uuid;
-    v_esperado varchar[] := ARRAY['stp_001', 'stp_002', 'stp_003', 'stp_004', 'stp_005', 'stp_006', 'stp_007', 'stp_008', 'stp_009', 'stp_010', 'stp_011', 'stp_012', 'stp_013', 'stp_014', 'stp_015', 'stp_016', 'stp_017', 'stp_018', 'stp_019', 'stp_020', 'stp_021', 'stp_022', 'stp_023', 'stp_024', 'stp_025', 'stp_026', 'stp_027', 'stp_028', 'stp_029', 'stp_030', 'stp_031', 'stp_032', 'stp_033', 'stp_034', 'stp_035', 'stp_036'];
+    v_esperado varchar[] := ARRAY['stp_001', 'stp_002', 'stp_003', 'stp_004', 'stp_005', 'stp_093', 'stp_006', 'stp_007', 'stp_094', 'stp_008', 'stp_009', 'stp_010', 'stp_011', 'stp_095', 'stp_013', 'stp_014', 'stp_015', 'stp_016', 'stp_017', 'stp_018', 'stp_019', 'stp_020', 'stp_021', 'stp_022', 'stp_023', 'stp_024', 'stp_096', 'stp_097', 'stp_026', 'stp_098', 'stp_027', 'stp_028', 'stp_099', 'stp_029', 'stp_030', 'stp_031', 'stp_100', 'stp_032', 'stp_101', 'stp_034', 'stp_035', 'stp_036'];
     v_obtenido varchar[];
 BEGIN
     SELECT v.id INTO v_id FROM variante v JOIN linea l ON l.id = v.linea_id
@@ -160,7 +168,7 @@ END $$;
 DO $$
 DECLARE
     v_id uuid;
-    v_esperado varchar[] := ARRAY['stp_037', 'stp_038', 'stp_034', 'stp_039', 'stp_040', 'stp_041', 'stp_042', 'stp_043', 'stp_044', 'stp_045', 'stp_046', 'stp_047', 'stp_048', 'stp_049', 'stp_021', 'stp_050', 'stp_051', 'stp_017', 'stp_016', 'stp_052', 'stp_053', 'stp_054', 'stp_055', 'stp_056', 'stp_057', 'stp_009', 'stp_058', 'stp_059', 'stp_060', 'stp_061', 'stp_062', 'stp_063', 'stp_064', 'stp_001'];
+    v_esperado varchar[] := ARRAY['stp_037', 'stp_102', 'stp_038', 'stp_034', 'stp_039', 'stp_040', 'stp_041', 'stp_042', 'stp_027', 'stp_044', 'stp_045', 'stp_097', 'stp_046', 'stp_047', 'stp_048', 'stp_049', 'stp_021', 'stp_050', 'stp_051', 'stp_017', 'stp_016', 'stp_052', 'stp_053', 'stp_054', 'stp_095', 'stp_055', 'stp_056', 'stp_057', 'stp_009', 'stp_058', 'stp_094', 'stp_059', 'stp_060', 'stp_061', 'stp_062', 'stp_103', 'stp_064', 'stp_001'];
     v_obtenido varchar[];
 BEGIN
     SELECT v.id INTO v_id FROM variante v JOIN linea l ON l.id = v.linea_id
@@ -177,7 +185,7 @@ END $$;
 DO $$
 DECLARE
     v_id uuid;
-    v_esperado varchar[] := ARRAY['stp_001', 'stp_002', 'stp_003', 'stp_004', 'stp_005', 'stp_065', 'stp_066', 'stp_067', 'stp_068', 'stp_069', 'stp_010', 'stp_011', 'stp_012', 'stp_013', 'stp_014', 'stp_015', 'stp_016', 'stp_017', 'stp_018', 'stp_019', 'stp_020', 'stp_021', 'stp_022', 'stp_023', 'stp_024', 'stp_025', 'stp_026', 'stp_027', 'stp_028', 'stp_029', 'stp_030', 'stp_031', 'stp_032', 'stp_033', 'stp_034', 'stp_035', 'stp_036'];
+    v_esperado varchar[] := ARRAY['stp_001', 'stp_002', 'stp_003', 'stp_004', 'stp_005', 'stp_093', 'stp_104', 'stp_065', 'stp_066', 'stp_067', 'stp_068', 'stp_069', 'stp_010', 'stp_011', 'stp_095', 'stp_013', 'stp_014', 'stp_015', 'stp_016', 'stp_017', 'stp_018', 'stp_019', 'stp_020', 'stp_021', 'stp_022', 'stp_023', 'stp_024', 'stp_096', 'stp_097', 'stp_026', 'stp_098', 'stp_027', 'stp_028', 'stp_099', 'stp_029', 'stp_030', 'stp_031', 'stp_100', 'stp_032', 'stp_101', 'stp_034', 'stp_035', 'stp_036'];
     v_obtenido varchar[];
 BEGIN
     SELECT v.id INTO v_id FROM variante v JOIN linea l ON l.id = v.linea_id
@@ -194,7 +202,7 @@ END $$;
 DO $$
 DECLARE
     v_id uuid;
-    v_esperado varchar[] := ARRAY['stp_037', 'stp_038', 'stp_034', 'stp_039', 'stp_040', 'stp_078', 'stp_041', 'stp_079', 'stp_042', 'stp_080', 'stp_043', 'stp_027', 'stp_044', 'stp_081', 'stp_045', 'stp_082', 'stp_046', 'stp_083', 'stp_047', 'stp_084', 'stp_048', 'stp_085', 'stp_049', 'stp_086', 'stp_021', 'stp_087', 'stp_050', 'stp_088', 'stp_051', 'stp_017', 'stp_016', 'stp_052', 'stp_053', 'stp_054', 'stp_055', 'stp_056', 'stp_057', 'stp_089', 'stp_090', 'stp_091', 'stp_092', 'stp_065', 'stp_061', 'stp_062', 'stp_063', 'stp_064', 'stp_001'];
+    v_esperado varchar[] := ARRAY['stp_037', 'stp_105', 'stp_038', 'stp_034', 'stp_039', 'stp_040', 'stp_078', 'stp_041', 'stp_079', 'stp_042', 'stp_080', 'stp_027', 'stp_044', 'stp_081', 'stp_045', 'stp_097', 'stp_046', 'stp_083', 'stp_047', 'stp_084', 'stp_048', 'stp_085', 'stp_049', 'stp_086', 'stp_021', 'stp_087', 'stp_050', 'stp_088', 'stp_051', 'stp_017', 'stp_016', 'stp_052', 'stp_053', 'stp_054', 'stp_095', 'stp_055', 'stp_056', 'stp_057', 'stp_089', 'stp_090', 'stp_091', 'stp_092', 'stp_065', 'stp_106', 'stp_061', 'stp_062', 'stp_103', 'stp_064', 'stp_001'];
     v_obtenido varchar[];
 BEGIN
     SELECT v.id INTO v_id FROM variante v JOIN linea l ON l.id = v.linea_id

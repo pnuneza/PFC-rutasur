@@ -22,6 +22,7 @@ referencia). Los paraderos del tramo común se comparten entre ramales porque Ya
 usa exactamente las mismas coordenadas.
 """
 
+import hashlib
 import json
 import math
 import re
@@ -240,6 +241,25 @@ def principales_sugeridos(variantes):
     return sorted(sugeridos)
 
 
+def estado_guardado():
+    """El último paraderos.json del repositorio, para que el editor lo abra tal cual.
+
+    La versión cambia si cambia el archivo: así, cuando se combinan en el repositorio
+    cambios hechos fuera del editor (por ejemplo, los lugares del chat de la ruta), el
+    editor los carga en lugar de lo que tenía guardado el navegador.
+    """
+    if not EXPORTADO.exists():
+        return None
+    texto = EXPORTADO.read_text(encoding="utf-8")
+    ex = json.loads(texto)
+    return {
+        "version": hashlib.sha1(texto.encode()).hexdigest()[:10],
+        "sel": {v["id"]: v["paraderos"] for v in ex["variantes"]},
+        "nombres": {p["clave"]: p["nombre"] for p in ex["paraderos"]},
+        "principales": [p["clave"] for p in ex["paraderos"] if p.get("principal")],
+    }
+
+
 def puntaje(nombre):
     n = nombre.lower()
     if any(r in n for r in REFERENCIAS):
@@ -341,6 +361,7 @@ def main():
               f"preseleccionadas={len(elegidas):2}  máx. desvío={max(p['off'] for p in paradas):.0f} m  "
               f"puntos de apoyo={sum(1 for p in paradas if p.get('apoyo'))}")
     salida["principales"] = principales_sugeridos(salida["variantes"])
+    salida["guardado"] = estado_guardado()
     datos = json.dumps(salida, ensure_ascii=False)
     (AQUI / "datos_editor.json").write_text(datos, encoding="utf-8")
     plantilla = (AQUI / "plantilla_editor.html").read_text(encoding="utf-8")
