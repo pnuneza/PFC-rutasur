@@ -34,6 +34,15 @@ Future<void> ir(WidgetTester tester, String seccion) async {
   await tester.pumpAndSettle();
 }
 
+/// Lleva el control a la vista (tablas anchas, formularios largos) y lo toca.
+Future<void> tocar(WidgetTester tester, String clave) async {
+  final f = find.byKey(Key(clave));
+  await tester.ensureVisible(f);
+  await tester.pumpAndSettle();
+  await tester.tap(f);
+  await tester.pumpAndSettle();
+}
+
 /// Desmonta el panel para detener la actualización periódica de la flota.
 Future<void> cerrar(WidgetTester tester) => tester.pumpWidget(const SizedBox());
 
@@ -126,8 +135,7 @@ void main() {
       expect(find.byKey(const Key('variante-MOLLEBAYA-IDA')), findsOneWidget);
       expect(find.byKey(const Key('paradero-stp_002')), findsOneWidget);
 
-      await tester.tap(find.byKey(const Key('quitar-stp_002')));
-      await tester.pumpAndSettle();
+      await tocar(tester, 'quitar-stp_002');
       await tester.tap(find.byKey(const Key('confirmar')));
       await tester.pumpAndSettle();
       expect(s.llamadas, contains('asignar stp_001,stp_003'));
@@ -138,8 +146,7 @@ void main() {
     testWidgets('agrega un paradero existente que está cerca del trazado', (tester) async {
       final s = await abrirPanel(tester);
       await ir(tester, 'rutas');
-      await tester.tap(find.byKey(const Key('agregar-existente')));
-      await tester.pumpAndSettle();
+      await tocar(tester, 'agregar-existente');
       await tester.tap(find.byKey(const Key('candidato-stp_004')));
       await tester.pumpAndSettle();
       expect(s.llamadas, contains('asignar stp_001,stp_002,stp_003,stp_004'));
@@ -165,8 +172,7 @@ void main() {
       await tester.pump();
       expect(find.textContaining('del trazado de Mollebaya → Centro'), findsOneWidget);
       expect(guardar().onPressed, isNotNull);
-      await tester.tap(find.byKey(const Key('guardar-paradero')));
-      await tester.pumpAndSettle();
+      await tocar(tester, 'guardar-paradero');
       expect(s.llamadas, containsAllInOrder(['crear Posta de salud', 'asignar stp_001,stp_002,stp_003,stp_010']));
       expect(find.byKey(const Key('formulario-paradero')), findsNothing);
       await cerrar(tester);
@@ -197,8 +203,7 @@ void main() {
         codigo: 'OUT_OF_CORRIDOR',
         mensaje: 'El paradero stp_002 está a 900 m del trazado',
       );
-      await tester.tap(find.byKey(const Key('quitar-stp_002')));
-      await tester.pumpAndSettle();
+      await tocar(tester, 'quitar-stp_002');
       await tester.tap(find.byKey(const Key('confirmar')));
       await tester.pumpAndSettle();
       expect(find.text('El paradero stp_002 está a 900 m del trazado'), findsOneWidget);
@@ -212,8 +217,7 @@ void main() {
       await ir(tester, 'cuentas');
       await tester.tap(find.byKey(const Key('pestana-conductores')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('nueva-cuenta-conductor')));
-      await tester.pumpAndSettle();
+      await tocar(tester, 'nueva-cuenta-conductor');
 
       expect(find.byKey(const Key('aviso-privacidad')), findsOneWidget);
       await tester.tap(find.byKey(const Key('campo-unidad')));
@@ -238,14 +242,12 @@ void main() {
       await ir(tester, 'cuentas');
       await tester.tap(find.byKey(const Key('pestana-conductores')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('desactivar-unidad07')));
-      await tester.pumpAndSettle();
+      await tocar(tester, 'desactivar-unidad07');
       await tester.tap(find.byKey(const Key('cancelar')));
       await tester.pumpAndSettle();
       expect(s.llamadas.where((l) => l.startsWith('accion')), isEmpty);
 
-      await tester.tap(find.byKey(const Key('restablecer-unidad07')));
-      await tester.pumpAndSettle();
+      await tocar(tester, 'restablecer-unidad07');
       await tester.tap(find.byKey(const Key('confirmar')));
       await tester.pumpAndSettle();
       expect(s.llamadas, contains('accion c07 RESET_PASSWORD'));
@@ -255,8 +257,7 @@ void main() {
     testWidgets('registrar una unidad y crear un moderador', (tester) async {
       final s = await abrirPanel(tester);
       await ir(tester, 'cuentas');
-      await tester.tap(find.byKey(const Key('registrar-unidad')));
-      await tester.pumpAndSettle();
+      await tocar(tester, 'registrar-unidad');
       await tester.enterText(find.byKey(const Key('campo-etiqueta')), '15');
       await tester.pump();
       await tester.tap(find.byKey(const Key('guardar-unidad')));
@@ -265,8 +266,7 @@ void main() {
 
       await tester.tap(find.byKey(const Key('pestana-panel')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('nueva-cuenta-panel')));
-      await tester.pumpAndSettle();
+      await tocar(tester, 'nueva-cuenta-panel');
       await tester.enterText(find.byKey(const Key('campo-usuario')), 'ana.moderadora');
       await tester.pump();
       await tester.tap(find.byKey(const Key('crear-cuenta')));
