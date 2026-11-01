@@ -24,6 +24,9 @@ las apps, con las rutas `/api/v1/admin/...`.
 - **El orden de los paraderos se calcula solo,** a lo largo del trazado. El panel decide
   qué paraderos tiene cada variante; nunca quedan huecos ni repetidos.
 - **Desactivar un paradero** lo quita de todas sus variantes. No se borra: puede volver.
+- **Paradero principal (★):** se ve en la app aunque el mapa esté alejado; los demás
+  aparecen al acercar (zoom 14). Conviene marcar solo los puntos que la gente reconoce
+  (plazas, cruces, terminales): hoy son 28 de 92.
 - **Todo cambio queda en el registro de eventos** con el usuario del panel que lo hizo.
 - **La sesión dura 12 horas** y vive solo en la pestaña: al recargar la página se vuelve
   a ingresar.
