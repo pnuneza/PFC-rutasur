@@ -11,7 +11,7 @@
 #
 #   docker compose exec `
 #     -e DATABASE_URL="postgresql://neondb_owner:...@ep-....neon.tech/rutasur?sslmode=require" `
-#     -e RUTASUR_APP_PASSWORD="(clave nueva y larga para rutasur_app)" `
+#     -e RUTASUR_APP_PASSWORD="(clave nueva y larga para rutasur_app)" `   (solo la primera vez)
 #     db bash /rutasur/database/aplicar_en_nube.sh
 #
 # DATABASE_URL es la del DUEÑO de la base (para crear tablas y el rol).
@@ -20,13 +20,6 @@
 set -euo pipefail
 
 : "${DATABASE_URL:?Defina DATABASE_URL con la conexión del dueño de la base en Neon}"
-: "${RUTASUR_APP_PASSWORD:?Defina RUTASUR_APP_PASSWORD (contraseña nueva del rol rutasur_app)}"
-
-if [ "${#RUTASUR_APP_PASSWORD}" -lt 20 ]; then
-    echo "ERROR: use una contraseña de al menos 20 caracteres para rutasur_app" >&2
-    exit 1
-fi
-
 # Error típico: pegar otra cosa (por ejemplo, una contraseña) en lugar de la cadena.
 # psql la tomaría como nombre de base y probaría la base LOCAL del contenedor.
 case "$DATABASE_URL" in
@@ -53,6 +46,12 @@ if psql "$DATABASE_URL" -tAc "SELECT to_regclass('public.linea') IS NOT NULL" | 
         psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$migracion"
     done
 else
+    # Solo al crear la base hace falta la contraseña del rol de la aplicación
+    : "${RUTASUR_APP_PASSWORD:?Defina RUTASUR_APP_PASSWORD (contraseña nueva del rol rutasur_app)}"
+    if [ "${#RUTASUR_APP_PASSWORD}" -lt 20 ]; then
+        echo "ERROR: use una contraseña de al menos 20 caracteres para rutasur_app" >&2
+        exit 1
+    fi
     bash "$DIR/aplicar_esquema.sh"
 fi
 
