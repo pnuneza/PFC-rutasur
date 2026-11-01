@@ -32,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -46,16 +46,18 @@ jobs:
         run: flutter pub get
 
       - name: APK del conductor
-        run: >
-          flutter build apk --release --flavor conductor
-          -t lib/entrypoints/main_conductor.dart
-          --dart-define=API_URL=$API_URL
+        run: |
+          set -o pipefail
+          flutter build apk --release --flavor conductor \
+            -t lib/entrypoints/main_conductor.dart \
+            --dart-define=API_URL=$API_URL 2>&1 | tee ../compilacion.log
 
       - name: APK del pasajero
-        run: >
-          flutter build apk --release --flavor pasajero
-          -t lib/entrypoints/main_pasajero.dart
-          --dart-define=API_URL=$API_URL
+        run: |
+          set -o pipefail
+          flutter build apk --release --flavor pasajero \
+            -t lib/entrypoints/main_pasajero.dart \
+            --dart-define=API_URL=$API_URL 2>&1 | tee ../compilacion.log
 
       - name: Nombres con la versión
         run: |
@@ -64,6 +66,10 @@ jobs:
           cp build/app/outputs/flutter-apk/app-conductor-release.apk ../instalables/rutasur-conductor-$VERSION.apk
           cp build/app/outputs/flutter-apk/app-pasajero-release.apk ../instalables/rutasur-pasajero-$VERSION.apk
           ls -la ../instalables
+
+      - name: Errores de la compilación
+        if: failure()
+        run: python3 ../.github/scripts/errores_gradle.py ../compilacion.log
 
       - uses: actions/upload-artifact@v4
         with:
