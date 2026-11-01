@@ -1,0 +1,250 @@
+{
+ "fleet": {
+  "data": {
+   "summary": {
+    "transmitting": 0,
+    "no_signal": 1,
+    "inactive": 1
+   },
+   "vehicles": [
+    {
+     "vehicle_id": "7c3e79e2-6033-4099-8831-99d8958591c9",
+     "vehicle_label": "07",
+     "username": "unidad07",
+     "status": "SIN_SENAL",
+     "since": "2026-11-01T05:39:47.475983Z",
+     "last_position_age_s": 3069,
+     "lat": -16.464156346539607,
+     "lon": -71.49070199932102,
+     "heading": 315,
+     "branch": "MOLLEBAYA",
+     "direction": "IDA",
+     "destination": "Centro (2 de Mayo)"
+    },
+    {
+     "vehicle_id": "f610de7e-a0af-465c-b885-450f88a41cf4",
+     "vehicle_label": "12",
+     "username": "unidad12",
+     "status": "INACTIVA",
+     "since": "2026-11-01T05:39:47.475983Z",
+     "last_position_age_s": null,
+     "lat": null,
+     "lon": null,
+     "heading": null,
+     "branch": null,
+     "direction": null,
+     "destination": null
+    }
+   ]
+  },
+  "meta": {
+   "timestamp": "2026-11-01T06:30:57Z",
+   "count": 2
+  }
+ },
+ "variants": {
+  "data": [
+   {
+    "id": "0681190d-37a2-4998-ad8f-172475b8cf59",
+    "branch": "MOLLEBAYA",
+    "direction": "IDA",
+    "destination": "Centro (2 de Mayo)",
+    "length_m": 16770.9,
+    "shape": [
+     [
+      -16.48721,
+      -71.475294
+     ],
+     [
+      -16.487219,
+      -71.475029
+     ],
+     [
+      -16.487299,
+      -71.474829
+     ]
+    ],
+    "stops": [
+     {
+      "code": "stp_001",
+      "name": "Santa Ana",
+      "reference": null,
+      "lat": -16.48721,
+      "lon": -71.475294,
+      "order": 1,
+      "distance_from_start_m": 0.0,
+      "shared_trunk": true,
+      "main": true
+     },
+     {
+      "code": "stp_002",
+      "name": "Calle La Unión",
+      "reference": null,
+      "lat": -16.486996,
+      "lon": -71.471855,
+      "order": 2,
+      "distance_from_start_m": 399.9,
+      "shared_trunk": true,
+      "main": false
+     }
+    ]
+   }
+  ],
+  "meta": {
+   "timestamp": "2026-11-01T20:19:30Z",
+   "count": 4
+  }
+ },
+ "stops": {
+  "data": [
+   {
+    "code": "stp_001",
+    "name": "Santa Ana",
+    "reference": null,
+    "lat": -16.48721,
+    "lon": -71.475294,
+    "shared_trunk": true,
+    "main": true,
+    "active": true,
+    "variants": [
+     "MOLLEBAYA-IDA",
+     "MOLLEBAYA-VUELTA",
+     "CERRILLO-IDA",
+     "CERRILLO-VUELTA"
+    ]
+   },
+   {
+    "code": "stp_002",
+    "name": "Calle La Unión",
+    "reference": null,
+    "lat": -16.486996,
+    "lon": -71.471855,
+    "shared_trunk": true,
+    "main": false,
+    "active": true,
+    "variants": [
+     "MOLLEBAYA-IDA",
+     "CERRILLO-IDA"
+    ]
+   }
+  ],
+  "meta": {
+   "timestamp": "2026-11-01T20:19:30Z",
+   "count": 92
+  }
+ },
+ "units": {
+  "data": [
+   {
+    "id": "7c3e79e2-6033-4099-8831-99d8958591c9",
+    "label": "07",
+    "active": true,
+    "username": "unidad07",
+    "created_at": "2026-11-01T05:39:47.475983Z"
+   },
+   {
+    "id": "f610de7e-a0af-465c-b885-450f88a41cf4",
+    "label": "12",
+    "active": true,
+    "username": "unidad12",
+    "created_at": "2026-11-01T05:39:47.475983Z"
+   }
+  ],
+  "meta": {
+   "timestamp": "2026-11-01T06:30:57Z",
+   "count": 2
+  }
+ },
+ "driver": {
+  "data": {
+   "account": {
+    "id": "2c554319-4d25-49c5-82d5-669b237d7ac7",
+    "username": "unidad15",
+    "role": "CONDUCTOR",
+    "active": true,
+    "locked_until": null,
+    "vehicle_label": "15"
+   },
+   "temporary_password": "hbxqRLhCeoTE"
+  },
+  "meta": {
+   "timestamp": "2026-11-01T06:30:57Z",
+   "count": null
+  }
+ },
+ "line": {
+  "data": {
+   "service_start": "05:00:00",
+   "service_end": "21:00:00"
+  },
+  "meta": {
+   "timestamp": "2026-11-01T06:30:57Z",
+   "count": null
+  }
+ },
+ "events": {
+  "data": {
+   "events": [
+    {
+     "id": 95,
+     "date": "2026-11-01T06:30:56.773583Z",
+     "type": "PETICION",
+     "source": "panel",
+     "vehicle_label": null,
+     "panel_user": "admin.demo",
+     "http_status": null,
+     "detail": {
+      "fin": "21:00",
+      "accion": "cambiar_horario",
+      "inicio": "05:00"
+     }
+    },
+    {
+     "id": 94,
+     "date": "2026-11-01T06:30:56.773583Z",
+     "type": "SEGURIDAD",
+     "source": "panel",
+     "vehicle_label": "15",
+     "panel_user": "admin.demo",
+     "http_status": null,
+     "detail": {
+      "accion": "crear_cuenta_conductor",
+      "usuario": "unidad15"
+     }
+    }
+   ],
+   "total": 6,
+   "page": 1,
+   "page_size": 50,
+   "retention_days": 30
+  },
+  "meta": {
+   "timestamp": "2026-11-01T06:30:57Z",
+   "count": 6
+  }
+ },
+ "panel_accounts": {
+  "data": [
+   {
+    "id": "f4c02cef-ab76-41bd-80a6-495f91e3aed0",
+    "username": "admin.demo",
+    "role": "ADMINISTRADOR",
+    "active": true,
+    "locked_until": null,
+    "vehicle_label": null
+   },
+   {
+    "id": "ffbc34bd-46d8-48c3-99e5-d1e18991bff5",
+    "username": "moderador.demo",
+    "role": "MODERADOR",
+    "active": true,
+    "locked_until": null,
+    "vehicle_label": null
+   }
+  ],
+  "meta": {
+   "timestamp": "2026-11-01T06:30:57Z",
+   "count": 2
+  }
+ }
+}

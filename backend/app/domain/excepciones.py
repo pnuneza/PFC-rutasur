@@ -50,3 +50,11 @@ class LimiteExcedido(ErrorDeNegocio):
     def __init__(self, mensaje: str, reintentar_en_s: int) -> None:
         super().__init__(mensaje)
         self.reintentar_en_s = reintentar_en_s
+
+
+class Conflicto(ErrorDeNegocio):
+    """El dato ya existe o choca con otro: usuario repetido, unidad con cuenta (409 CONFLICT)."""
+
+
+class FueraDelCorredor(ErrorDeNegocio):
+    """El paradero queda a más de 150 m del trazado (RN-003, 422 OUT_OF_CORRIDOR)."""
