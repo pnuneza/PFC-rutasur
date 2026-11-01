@@ -36,12 +36,12 @@ android {
     productFlavors {
         create("pasajero") {
             dimension = "app"
-            resValue("string", "app_name", "RutaSur")
+            manifestPlaceholders["nombreApp"] = "RutaSur"
         }
         create("conductor") {
             dimension = "app"
             applicationIdSuffix = ".conductor"
-            resValue("string", "app_name", "RutaSur Conductor")
+            manifestPlaceholders["nombreApp"] = "RutaSur Conductor"
         }
     }
 
