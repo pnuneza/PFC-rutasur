@@ -14,6 +14,12 @@ dependencies:
   latlong2: ^0.9.1
   # Cliente HTTP para la API REST
   http: ^1.2.2
+  # App del conductor (Módulo 4)
+  geolocator: ^14.0.2 # GPS y servicio en primer plano con notificación (RF-011)
+  permission_handler: ^12.0.1 # notificaciones (Android 13+) y excepción de batería
+  flutter_secure_storage: ^10.0.0 # token en el almacenamiento seguro (P05 Tabla 34)
+  shared_preferences: ^2.5.3 # sesión y cola de posiciones pendientes (RF-012)
+  uuid: ^4.5.1 # identificador de cada posición, generado en el teléfono
 
 dev_dependencies:
   flutter_test:
