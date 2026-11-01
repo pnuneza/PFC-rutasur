@@ -18,9 +18,11 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.domain.excepciones import (
     AccesoDenegado,
+    Conflicto,
     CredencialesInvalidas,
     CuentaBloqueada,
     ErrorDeNegocio,
+    FueraDelCorredor,
     LimiteExcedido,
     RecursoNoEncontrado,
     SesionNoActiva,
@@ -41,6 +43,8 @@ ERRORES_DE_NEGOCIO: dict[type[ErrorDeNegocio], tuple[int, str]] = {
     TokenInvalido: (status.HTTP_401_UNAUTHORIZED, "TOKEN_MISSING_OR_EXPIRED"),
     CuentaBloqueada: (status.HTTP_403_FORBIDDEN, "ACCOUNT_LOCKED"),
     LimiteExcedido: (status.HTTP_429_TOO_MANY_REQUESTS, "RATE_LIMITED"),
+    Conflicto: (status.HTTP_409_CONFLICT, "CONFLICT"),
+    FueraDelCorredor: (status.HTTP_422_UNPROCESSABLE_CONTENT, "OUT_OF_CORRIDOR"),
     ErrorDeNegocio: (status.HTTP_400_BAD_REQUEST, "VALIDATION_ERROR"),
 }
 
