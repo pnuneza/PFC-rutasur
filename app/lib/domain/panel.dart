@@ -129,6 +129,7 @@ class ParaderoVarianteAdmin {
     required this.orden,
     required this.distanciaM,
     required this.tramoComun,
+    this.principal = false,
   });
 
   factory ParaderoVarianteAdmin.fromJson(Map<String, dynamic> j) => ParaderoVarianteAdmin(
@@ -139,6 +140,7 @@ class ParaderoVarianteAdmin {
         orden: j['order'] as int,
         distanciaM: (j['distance_from_start_m'] as num).toDouble(),
         tramoComun: j['shared_trunk'] as bool,
+        principal: j['main'] as bool? ?? false,
       );
 
   final String codigo;
@@ -148,6 +150,9 @@ class ParaderoVarianteAdmin {
   final int orden;
   final double distanciaM;
   final bool tramoComun;
+
+  /// Se ve en la app aunque el mapa esté alejado.
+  final bool principal;
 }
 
 class VarianteAdmin {
@@ -201,6 +206,7 @@ class ParaderoAdmin {
     required this.tramoComun,
     required this.activo,
     required this.variantes,
+    this.principal = false,
   });
 
   factory ParaderoAdmin.fromJson(Map<String, dynamic> j) => ParaderoAdmin(
@@ -211,6 +217,7 @@ class ParaderoAdmin {
         tramoComun: j['shared_trunk'] as bool,
         activo: j['active'] as bool,
         variantes: [for (final v in j['variants'] as List<dynamic>) v as String],
+        principal: j['main'] as bool? ?? false,
       );
 
   final String codigo;
@@ -220,6 +227,7 @@ class ParaderoAdmin {
   final bool tramoComun;
   final bool activo;
   final List<String> variantes;
+  final bool principal;
 }
 
 /// Lo que el formulario A-03a envía.
@@ -229,6 +237,7 @@ class DatosParadero {
     required this.referencia,
     required this.ubicacion,
     required this.tramoComun,
+    this.principal = false,
     this.activo = true,
   });
 
@@ -236,6 +245,7 @@ class DatosParadero {
   final String? referencia;
   final LatLng ubicacion;
   final bool tramoComun;
+  final bool principal;
   final bool activo;
 
   Map<String, Object?> toJson() => {
@@ -244,6 +254,7 @@ class DatosParadero {
         'lat': ubicacion.latitude,
         'lon': ubicacion.longitude,
         'shared_trunk': tramoComun,
+        'main': principal,
         'active': activo,
       };
 }

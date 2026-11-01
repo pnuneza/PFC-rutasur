@@ -76,6 +76,7 @@ class ParaderoAdmin:
     en_tramo_comun: bool
     activo: bool
     variantes: list[str]  # «MOLLEBAYA-IDA», …
+    principal: bool = False  # se ve con el mapa alejado
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,6 +87,7 @@ class DatosParadero:
     referencia: str | None
     ubicacion: Coordenada
     en_tramo_comun: bool
+    principal: bool = False
 
 
 # ----------------------------------------------------------------------

@@ -314,7 +314,14 @@ class _PantallaRutasState extends State<PantallaRutas> {
                   foregroundColor: Colors.white,
                   child: Text('${p.orden}'),
                 ),
-                title: Text(p.nombre),
+                title: Row(children: [
+                  Flexible(child: Text(p.nombre)),
+                  if (p.principal)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 6),
+                      child: Icon(Icons.star, size: 18, color: Color(0xFFB8860B), semanticLabel: 'principal'),
+                    ),
+                ]),
                 subtitle: Text([
                   p.codigo,
                   'km ${(p.distanciaM / 1000).toStringAsFixed(2).replaceAll('.', ',')}',
@@ -403,6 +410,14 @@ class _PantallaRutasState extends State<PantallaRutas> {
                     onChanged: (x) => setState(() => e.tramoComun = x ?? false),
                   ),
                   const Text('Tramo común de ambos ramales'),
+                ]),
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  Checkbox(
+                    key: const Key('campo-principal'),
+                    value: e.principal,
+                    onChanged: (x) => setState(() => e.principal = x ?? false),
+                  ),
+                  const Flexible(child: Text('Principal (se ve con el mapa alejado)')),
                 ]),
                 if (e.original == null)
                   Row(mainAxisSize: MainAxisSize.min, children: [
@@ -533,6 +548,7 @@ class _Edicion {
         lat = TextEditingController(text: original?.ubicacion.latitude.toStringAsFixed(6) ?? ''),
         lon = TextEditingController(text: original?.ubicacion.longitude.toStringAsFixed(6) ?? ''),
         tramoComun = original?.tramoComun ?? false,
+        principal = original?.principal ?? false,
         activo = original?.activo ?? true;
 
   final ParaderoAdmin? original;
@@ -541,6 +557,7 @@ class _Edicion {
   final TextEditingController lat;
   final TextEditingController lon;
   bool tramoComun;
+  bool principal;
   bool activo;
   bool agregarAVariante = true;
 
@@ -567,6 +584,7 @@ class _Edicion {
         referencia: referencia.text.trim().isEmpty ? null : referencia.text.trim(),
         ubicacion: ubicacion!,
         tramoComun: tramoComun,
+        principal: principal,
         activo: activo,
       );
 

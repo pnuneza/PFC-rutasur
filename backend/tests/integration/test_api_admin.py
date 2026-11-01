@@ -197,6 +197,33 @@ def test_mover_un_paradero_fuera_del_corredor_no_cambia_nada(cliente, admin):
     assert (sigue["lat"], sigue["lon"]) == (p["lat"], p["lon"])
 
 
+def test_marcar_un_paradero_como_principal_se_ve_en_la_app(cliente, admin):
+    v = variante(cliente, admin, "MOLLEBAYA", "IDA")
+    p = next(x for x in v["stops"][1:-1] if not x["main"])
+    datos = {"name": p["name"], "lat": p["lat"], "lon": p["lon"], "main": True}
+
+    r = cliente.put(f"/api/v1/admin/stops/{p['code']}", headers=admin, json=datos)
+    assert r.status_code == 200 and r.json()["data"]["main"] is True
+
+    def en_la_app() -> bool:
+        linea = cliente.get("/api/v1/routes/lb").json()["data"]
+        publica = next(
+            x for x in linea["variants"] if (x["branch"], x["direction"]) == ("MOLLEBAYA", "IDA")
+        )
+        return next(x["main"] for x in publica["stops"] if x["code"] == p["code"])
+
+    assert en_la_app() is True
+    marcado = next(
+        x for x in variante(cliente, admin, "MOLLEBAYA", "IDA")["stops"] if x["code"] == p["code"]
+    )
+    assert marcado["main"] is True
+
+    r = cliente.put(
+        f"/api/v1/admin/stops/{p['code']}", headers=admin, json={**datos, "main": False}
+    )
+    assert r.status_code == 200 and en_la_app() is False
+
+
 def test_desactivar_un_paradero_lo_quita_de_sus_variantes(cliente, admin):
     v = variante(cliente, admin, "MOLLEBAYA", "IDA")
     p = v["stops"][2]

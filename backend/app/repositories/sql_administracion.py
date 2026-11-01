@@ -69,7 +69,7 @@ _SQL_VARIANTES = text("""
 
 _SQL_PARADEROS_VARIANTE = text("""
     SELECT p.codigo, p.nombre, p.referencia, ST_Y(p.ubicacion) AS lat, ST_X(p.ubicacion) AS lon,
-           p.en_tramo_comun, pv.orden, pv.distancia_desde_inicio_m
+           p.en_tramo_comun, p.principal, pv.orden, pv.distancia_desde_inicio_m
       FROM paradero_variante pv JOIN paradero p ON p.id = pv.paradero_id
      WHERE pv.variante_id = :variante
      ORDER BY pv.orden
@@ -77,7 +77,7 @@ _SQL_PARADEROS_VARIANTE = text("""
 
 _SQL_PARADEROS = text(r"""
     SELECT p.codigo, p.nombre, p.referencia, ST_Y(p.ubicacion) AS lat, ST_X(p.ubicacion) AS lon,
-           p.en_tramo_comun, p.activo,
+           p.en_tramo_comun, p.principal, p.activo,
            COALESCE(array_agg(v.ramal::text || '-' || v.sentido::text
                               ORDER BY v.ramal, v.sentido)
                     FILTER (WHERE v.id IS NOT NULL), '{}') AS variantes
@@ -102,13 +102,15 @@ _SQL_DISTANCIA_AL_CORREDOR = text("""
 _SQL_CODIGOS_USADOS = text("SELECT codigo FROM paradero")
 
 _SQL_CREAR_PARADERO = text("""
-    INSERT INTO paradero (codigo, nombre, referencia, ubicacion, en_tramo_comun)
-    VALUES (:codigo, :nombre, :referencia, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :comun)
+    INSERT INTO paradero (codigo, nombre, referencia, ubicacion, en_tramo_comun, principal)
+    VALUES (:codigo, :nombre, :referencia, ST_SetSRID(ST_MakePoint(:lon, :lat), 4326), :comun,
+            :principal)
 """)
 
 _SQL_EDITAR_PARADERO = text("""
     UPDATE paradero
        SET nombre = :nombre, referencia = :referencia, en_tramo_comun = :comun,
+           principal = :principal,
            ubicacion = ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)
      WHERE codigo = :codigo
 """)
@@ -313,6 +315,7 @@ class RepositorioAdministracionSQL:
                             "referencia": p["referencia"],
                             "ubicacion": Coordenada(p["lat"], p["lon"]),
                             "en_tramo_comun": p["en_tramo_comun"],
+                            "principal": p["principal"],
                             "orden": p["orden"],
                             "distancia_m": float(p["distancia_desde_inicio_m"]),
                         }
@@ -343,6 +346,7 @@ class RepositorioAdministracionSQL:
                 referencia=f["referencia"],
                 ubicacion=Coordenada(f["lat"], f["lon"]),
                 en_tramo_comun=f["en_tramo_comun"],
+                principal=f["principal"],
                 activo=f["activo"],
                 variantes=list(f["variantes"]),
             )
@@ -395,6 +399,7 @@ class RepositorioAdministracionSQL:
             "lat": datos.ubicacion.lat,
             "lon": datos.ubicacion.lon,
             "comun": datos.en_tramo_comun,
+            "principal": datos.principal,
         }
 
     # --- A-04 ---------------------------------------------------------------

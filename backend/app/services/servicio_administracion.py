@@ -186,7 +186,9 @@ class ServicioAdministracion:
             raise ErrorDeNegocio("El nombre debe tener de 3 a 80 caracteres")
         if referencia is not None and len(referencia) > 120:
             raise ErrorDeNegocio("La referencia puede tener hasta 120 caracteres")
-        return DatosParadero(nombre, referencia, datos.ubicacion, datos.en_tramo_comun)
+        return DatosParadero(
+            nombre, referencia, datos.ubicacion, datos.en_tramo_comun, datos.principal
+        )
 
     def _exigir_dentro_del_corredor(self, datos: DatosParadero) -> None:
         distancia = self._repo.distancia_al_corredor(datos.ubicacion)

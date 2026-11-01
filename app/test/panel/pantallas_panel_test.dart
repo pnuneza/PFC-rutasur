@@ -178,6 +178,24 @@ void main() {
       await cerrar(tester);
     });
 
+    testWidgets('marcar un paradero como principal lo muestra con estrella', (tester) async {
+      final s = await abrirPanel(tester);
+      await ir(tester, 'rutas');
+      final estrella = find.descendant(
+        of: find.byKey(const Key('paradero-stp_002')),
+        matching: find.byIcon(Icons.star),
+      );
+      expect(estrella, findsNothing);
+
+      await tester.tap(find.byKey(const Key('paradero-stp_002')));
+      await tester.pumpAndSettle();
+      await tocar(tester, 'campo-principal');
+      await tocar(tester, 'guardar-paradero');
+      expect(s.llamadas, contains('editar stp_002 Plaza Characato ★'));
+      expect(estrella, findsOneWidget);
+      await cerrar(tester);
+    });
+
     testWidgets('el horario se valida antes de enviarlo (RN-009)', (tester) async {
       final s = await abrirPanel(tester);
       await ir(tester, 'rutas');

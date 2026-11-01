@@ -196,6 +196,7 @@ class ServicioPanelFalso implements ServicioPanel {
             orden: i + 1,
             distanciaM: (-16.45 - p.ubicacion.latitude).abs() * 111195,
             tramoComun: p.tramoComun,
+            principal: p.principal,
           ),
       ],
     );
@@ -226,6 +227,7 @@ class ServicioPanelFalso implements ServicioPanel {
       referencia: d.referencia,
       ubicacion: d.ubicacion,
       tramoComun: d.tramoComun,
+      principal: d.principal,
       activo: true,
       variantes: const [],
     );
@@ -235,7 +237,23 @@ class ServicioPanelFalso implements ServicioPanel {
 
   @override
   Future<ParaderoAdmin> editarParadero(AccesoPanel a, String codigo, DatosParadero d) async {
-    _registrar('editar $codigo ${d.nombre}');
+    _registrar('editar $codigo ${d.nombre}${d.principal ? ' ★' : ''}');
+    paraderosActuales = [
+      for (final p in paraderosActuales)
+        if (p.codigo != codigo)
+          p
+        else
+          ParaderoAdmin(
+            codigo: codigo,
+            nombre: d.nombre,
+            referencia: d.referencia,
+            ubicacion: d.ubicacion,
+            tramoComun: d.tramoComun,
+            principal: d.principal,
+            activo: d.activo,
+            variantes: p.variantes,
+          ),
+    ];
     return paraderosActuales.firstWhere((p) => p.codigo == codigo);
   }
 

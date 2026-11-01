@@ -45,7 +45,7 @@
  "variants": {
   "data": [
    {
-    "id": "70f936e5-917b-4627-911f-961d70e5bc37",
+    "id": "0681190d-37a2-4998-ad8f-172475b8cf59",
     "branch": "MOLLEBAYA",
     "direction": "IDA",
     "destination": "Centro (2 de Mayo)",
@@ -73,7 +73,8 @@
       "lon": -71.475294,
       "order": 1,
       "distance_from_start_m": 0.0,
-      "shared_trunk": true
+      "shared_trunk": true,
+      "main": true
      },
      {
       "code": "stp_002",
@@ -83,13 +84,14 @@
       "lon": -71.471855,
       "order": 2,
       "distance_from_start_m": 399.9,
-      "shared_trunk": true
+      "shared_trunk": true,
+      "main": false
      }
     ]
    }
   ],
   "meta": {
-   "timestamp": "2026-11-01T06:30:57Z",
+   "timestamp": "2026-11-01T20:19:30Z",
    "count": 4
   }
  },
@@ -102,6 +104,7 @@
     "lat": -16.48721,
     "lon": -71.475294,
     "shared_trunk": true,
+    "main": true,
     "active": true,
     "variants": [
      "MOLLEBAYA-IDA",
@@ -117,6 +120,7 @@
     "lat": -16.486996,
     "lon": -71.471855,
     "shared_trunk": true,
+    "main": false,
     "active": true,
     "variants": [
      "MOLLEBAYA-IDA",
@@ -125,8 +129,8 @@
    }
   ],
   "meta": {
-   "timestamp": "2026-11-01T06:30:57Z",
-   "count": 84
+   "timestamp": "2026-11-01T20:19:30Z",
+   "count": 92
   }
  },
  "units": {

@@ -57,6 +57,7 @@ class ParaderoDeVarianteAdminDTO(BaseModel):
     order: int
     distance_from_start_m: float
     shared_trunk: bool
+    main: bool = False
 
 
 class VarianteAdminDTO(BaseModel):
@@ -84,6 +85,7 @@ class ParaderoAdminDTO(BaseModel):
     lat: float
     lon: float
     shared_trunk: bool
+    main: bool = Field(default=False, description="Paradero principal: se ve con el mapa alejado")
     active: bool
     variants: list[str] = Field(examples=[["MOLLEBAYA-IDA", "CERRILLO-IDA"]])
 
@@ -94,6 +96,7 @@ class ParaderoEntradaDTO(BaseModel):
     lat: float = Field(ge=-90, le=90)
     lon: float = Field(ge=-180, le=180)
     shared_trunk: bool = False
+    main: bool = False
 
 
 class ParaderoEdicionDTO(ParaderoEntradaDTO):

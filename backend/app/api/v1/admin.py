@@ -104,6 +104,7 @@ def _paradero(p: ParaderoAdmin) -> ParaderoAdminDTO:
         lat=p.ubicacion.lat,
         lon=p.ubicacion.lon,
         shared_trunk=p.en_tramo_comun,
+        main=p.principal,
         active=p.activo,
         variants=p.variantes,
     )
@@ -127,6 +128,7 @@ def _variante(v: dict) -> VarianteAdminDTO:
                 order=p["orden"],
                 distance_from_start_m=p["distancia_m"],
                 shared_trunk=p["en_tramo_comun"],
+                main=p["principal"],
             )
             for p in v["paraderos"]
         ],
@@ -140,7 +142,9 @@ def _unidad(u: UnidadAdmin) -> UnidadAdminDTO:
 
 
 def _datos(d: ParaderoEntradaDTO) -> DatosParadero:
-    return DatosParadero(d.name, d.reference, Coordenada(d.lat, d.lon), d.shared_trunk)
+    return DatosParadero(
+        d.name, d.reference, Coordenada(d.lat, d.lon), d.shared_trunk, principal=d.main
+    )
 
 
 # ----------------------------------------------------------------------

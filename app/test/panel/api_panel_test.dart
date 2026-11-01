@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:rutasur/data/api_panel.dart';
 import 'package:rutasur/domain/modelos.dart';
 import 'package:rutasur/domain/panel.dart';
@@ -60,8 +61,22 @@ void main() {
     final v = (await a.variantes(acceso)).single;
     expect(v.trazado, hasLength(3));
     expect(v.paraderos.first.orden, 1);
-    expect((await a.paraderos(acceso)).first.codigo, startsWith('stp_'));
+    expect(v.paraderos.map((p) => p.principal), [true, false]);
+    final paraderos = await a.paraderos(acceso);
+    expect(paraderos.first.codigo, startsWith('stp_'));
+    expect(paraderos.map((p) => p.principal), [true, false]);
     expect((await a.unidades(acceso)).map((u) => u.etiqueta), containsAll(['07', '12']));
+  });
+
+  test('el formulario de paradero envía si es principal', () {
+    const d = DatosParadero(
+      nombre: 'Plaza Characato',
+      referencia: null,
+      ubicacion: LatLng(-16.47, -71.48),
+      tramoComun: false,
+      principal: true,
+    );
+    expect(d.toJson()['main'], isTrue);
   });
 
   test('crear una cuenta de conductor devuelve la contraseña temporal', () async {
