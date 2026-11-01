@@ -66,7 +66,18 @@ Future<void> abrirBusquedaConResultado(WidgetTester tester) async {
 Future<void> abrirLlegadasConEstrella(WidgetTester tester) async {
   await tester.pumpWidget(enApp(Scaffold(
     body: HojaLlegadas(
-      repositorio: RepositorioFalso(),
+      repositorio: RepositorioFalso(llegadasPorParadero: {
+        'stp_002': const [
+          Llegada(
+            etiqueta: '07',
+            ramal: Ramal.mollebaya,
+            destino: 'Centro (2 de Mayo)',
+            etaS: 781,
+            distanciaM: 6825,
+            antiguedadS: 9,
+          ),
+        ],
+      }),
       paradero: paraderosUnicos(lineaDePrueba())[1],
       horario: '05:00 a 21:00',
       esFavorito: true,
