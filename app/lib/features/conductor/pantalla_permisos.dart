@@ -46,48 +46,58 @@ class _PantallaPermisosState extends State<PantallaPermisos> with WidgetsBinding
         title: const Text('Permisos del teléfono'),
       ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(20),
+        child: Column(
           children: [
-            const Text('Para que los pasajeros vean la unidad con la pantalla apagada, '
-                'RutaSur necesita estos permisos.'),
-            const SizedBox(height: 16),
-            _Tarjeta(
-              clave: const Key('permiso-ubicacion'),
-              titulo: 'Ubicación precisa',
-              explicacion: 'Obligatorio. Sin permiso de ubicación no se puede transmitir. '
-                  'Si Android lo ofrece, elige «Permitir todo el tiempo».',
-              estado: p?.ubicacion,
-              alPedir: c.pedirUbicacion,
-            ),
-            _Tarjeta(
-              clave: const Key('permiso-notificaciones'),
-              titulo: 'Notificaciones',
-              explicacion: 'Obligatorio. Muestra el aviso permanente de que la unidad está '
-                  'transmitiendo.',
-              estado: p?.notificaciones,
-              alPedir: c.pedirNotificaciones,
-            ),
-            _Tarjeta(
-              clave: const Key('permiso-bateria'),
-              titulo: 'Sin restricción de batería',
-              explicacion: 'Recomendado. Evita que el teléfono detenga la transmisión para '
-                  'ahorrar batería.',
-              estado: p?.bateria,
-              alPedir: c.pedirBateria,
-            ),
-            if (p?.ubicacion == EstadoPermiso.denegadoSiempre)
-              TextButton(
-                onPressed: c.abrirAjustes,
-                child: const Text('Abrir los ajustes de la aplicación'),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  const Text('Para que los pasajeros vean la unidad con la pantalla apagada, '
+                      'RutaSur necesita estos permisos.'),
+                  const SizedBox(height: 16),
+                  _Tarjeta(
+                    clave: const Key('permiso-ubicacion'),
+                    titulo: 'Ubicación precisa',
+                    explicacion: 'Obligatorio. Sin permiso de ubicación no se puede transmitir. '
+                        'Si Android lo ofrece, elige «Permitir todo el tiempo».',
+                    estado: p?.ubicacion,
+                    alPedir: c.pedirUbicacion,
+                  ),
+                  _Tarjeta(
+                    clave: const Key('permiso-notificaciones'),
+                    titulo: 'Notificaciones',
+                    explicacion: 'Obligatorio. Muestra el aviso permanente de que la unidad está '
+                        'transmitiendo.',
+                    estado: p?.notificaciones,
+                    alPedir: c.pedirNotificaciones,
+                  ),
+                  _Tarjeta(
+                    clave: const Key('permiso-bateria'),
+                    titulo: 'Sin restricción de batería',
+                    explicacion: 'Recomendado. Evita que el teléfono detenga la transmisión para '
+                        'ahorrar batería.',
+                    estado: p?.bateria,
+                    alPedir: c.pedirBateria,
+                  ),
+                  if (p?.ubicacion == EstadoPermiso.denegadoSiempre)
+                    TextButton(
+                      onPressed: c.abrirAjustes,
+                      child: const Text('Abrir los ajustes de la aplicación'),
+                    ),
+                ],
               ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 56,
-              child: FilledButton(
-                key: const Key('continuar'),
-                onPressed: (p?.obligatoriosListos ?? false) ? c.continuarDesdePermisos : null,
-                child: const Text('Continuar'),
+            ),
+            // Fijo abajo: siempre visible aunque las tarjetas no quepan en la pantalla
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: FilledButton(
+                  key: const Key('continuar'),
+                  onPressed: (p?.obligatoriosListos ?? false) ? c.continuarDesdePermisos : null,
+                  child: const Text('Continuar'),
+                ),
               ),
             ),
           ],
