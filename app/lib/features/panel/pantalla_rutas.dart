@@ -409,7 +409,7 @@ class _PantallaRutasState extends State<PantallaRutas> {
                     value: e.tramoComun,
                     onChanged: (x) => setState(() => e.tramoComun = x ?? false),
                   ),
-                  const Text('Tramo común de ambos ramales'),
+                  const Flexible(child: Text('Tramo común de ambos ramales')),
                 ]),
                 Row(mainAxisSize: MainAxisSize.min, children: [
                   Checkbox(
@@ -426,7 +426,7 @@ class _PantallaRutasState extends State<PantallaRutas> {
                       value: e.agregarAVariante,
                       onChanged: (x) => setState(() => e.agregarAVariante = x ?? false),
                     ),
-                    Text('Agregar a ${v.nombre}'),
+                    Flexible(child: Text('Agregar a ${v.nombre}')),
                   ])
                 else
                   Row(mainAxisSize: MainAxisSize.min, children: [
@@ -435,7 +435,7 @@ class _PantallaRutasState extends State<PantallaRutas> {
                       value: e.activo,
                       onChanged: (x) => setState(() => e.activo = x ?? true),
                     ),
-                    const Text('Activo (si se desactiva, sale de todas sus variantes)'),
+                    const Flexible(child: Text('Activo (si se desactiva, sale de todas sus variantes)')),
                   ]),
               ]),
               const SizedBox(height: 8),
