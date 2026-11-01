@@ -135,7 +135,8 @@ class MapaRuta extends StatelessWidget {
           ],
         ),
         // Atribución obligatoria por la política de uso de OpenStreetMap
-        SimpleAttributionWidget(source: const Text('OpenStreetMap contributors')),
+        // El crédito acompaña al fondo de OpenStreetMap
+        if (mostrarTeselas) SimpleAttributionWidget(source: const Text('OpenStreetMap contributors')),
       ],
     );
   }
