@@ -37,7 +37,7 @@ _SQL_VARIANTES = text("""
 _SQL_PARADEROS_DE_VARIANTES = text("""
     SELECT pv.variante_id, p.codigo, p.nombre, p.referencia,
            ST_Y(p.ubicacion) AS lat, ST_X(p.ubicacion) AS lon,
-           pv.orden, pv.distancia_desde_inicio_m, p.en_tramo_comun
+           pv.orden, pv.distancia_desde_inicio_m, p.en_tramo_comun, p.principal
       FROM paradero_variante pv
       JOIN paradero p ON p.id = pv.paradero_id
       JOIN variante v ON v.id = pv.variante_id
@@ -95,6 +95,7 @@ class RepositorioRutasSQL:
                     orden=p["orden"],
                     distancia_desde_inicio_m=_flotante(p["distancia_desde_inicio_m"]),
                     en_tramo_comun=p["en_tramo_comun"],
+                    principal=p["principal"],
                 )
             )
 

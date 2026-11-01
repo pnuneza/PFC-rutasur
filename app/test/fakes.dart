@@ -116,6 +116,7 @@ UnidadActiva unidadDePrueba({String etiqueta = '07', int antiguedadS = 10}) => U
 class PreferenciasEnMemoria implements PreferenciasPasajero {
   bool vista = false;
   List<String> codigos = [];
+  Sentido? sentido;
 
   @override
   Future<bool> bienvenidaVista() async => vista;
@@ -125,6 +126,10 @@ class PreferenciasEnMemoria implements PreferenciasPasajero {
   Future<List<String>> favoritos() async => List.of(codigos);
   @override
   Future<void> guardarFavoritos(List<String> c) async => codigos = List.of(c);
+  @override
+  Future<Sentido?> sentidoElegido() async => sentido;
+  @override
+  Future<void> guardarSentido(Sentido? s) async => sentido = s;
 }
 
 class UbicacionFalsa implements UbicacionPasajero {

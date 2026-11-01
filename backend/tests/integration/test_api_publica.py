@@ -136,3 +136,13 @@ def test_codigo_de_paradero_mal_formado_es_400(cliente, codigo):
     r = cliente.get(f"/api/v1/stops/{codigo}/arrivals")
     assert r.status_code == 400
     assert r.json()["error"]["code"] == "VALIDATION_ERROR"
+
+
+def test_cada_variante_tiene_paraderos_principales_y_empieza_en_uno(cliente):
+    """0.6.1: con el mapa alejado la app solo muestra los principales (plazas, cruces...)."""
+    linea = cliente.get("/api/v1/routes/lb").json()["data"]
+    for v in linea["variants"]:
+        principales = [p for p in v["stops"] if p["main"]]
+        assert len(principales) >= 2, (v["branch"], v["direction"])
+        assert v["stops"][0]["main"] and v["stops"][-1]["main"]  # los terminales
+        assert len(principales) < len(v["stops"]) / 2
