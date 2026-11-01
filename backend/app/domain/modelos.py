@@ -72,6 +72,7 @@ class ParaderoEnVariante:
     orden: int
     distancia_desde_inicio_m: float
     en_tramo_comun: bool
+    principal: bool = False  # se ve con el mapa alejado (0.6.1)
 
 
 @dataclass(frozen=True, slots=True)

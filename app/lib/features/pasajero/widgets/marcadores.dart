@@ -10,10 +10,18 @@ import '../../../domain/modelos.dart';
 
 /// Paradero: círculo blanco con el borde del color de su tramo (RF-001).
 class MarcadorParadero extends StatelessWidget {
-  const MarcadorParadero({super.key, required this.paradero, required this.alTocar});
+  const MarcadorParadero({
+    super.key,
+    required this.paradero,
+    required this.alTocar,
+    this.destacado = false,
+  });
 
   final ParaderoEnMapa paradero;
   final VoidCallback alTocar;
+
+  /// Paradero principal: un poco más grande, para ubicarse con el mapa alejado.
+  final bool destacado;
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +36,12 @@ class MarcadorParadero extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: Center(
           child: Container(
-            width: 18,
-            height: 18,
+            width: destacado ? 24 : 18,
+            height: destacado ? 24 : 18,
             decoration: BoxDecoration(
               color: Colors.white,
               shape: BoxShape.circle,
-              border: Border.all(color: color, width: 4),
+              border: Border.all(color: color, width: destacado ? 6 : 4),
             ),
           ),
         ),

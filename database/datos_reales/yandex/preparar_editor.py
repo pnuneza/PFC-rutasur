@@ -109,6 +109,9 @@ EXPORTADO = AQUI.parent / "paraderos.json"
 # Variantes con trazado nuevo: su preselección sale de lo ya elegido (ver seleccion_renovada)
 RENOVADAS = {("CERRILLO", "IDA"), ("CERRILLO", "VUELTA")}
 CERCA_M = 80
+# Paraderos principales sugeridos (los que la app muestra con el mapa alejado, 0.6.1):
+# terminales y lugares que todos conocen. El autor los corrige con la estrella del editor.
+PRINCIPALES_SUGERIDOS = re.compile(r"plaza|cruce|óvalo|unsa|santa ana", re.IGNORECASE)
 # Tramos sin paradas de Yandex: puntos de apoyo para elegir paraderos en el editor
 HUECO_M = 400
 PASO_APOYO_M = 100
@@ -217,6 +220,26 @@ def seleccion_renovada(ramal, sentido, paradas, obligatorias):
     return {i for i, p in enumerate(paradas) if p["clave"] in marcadas}
 
 
+def principales_sugeridos(variantes):
+    """Lo ya marcado en paraderos.json o, si nunca se marcó, la sugerencia por nombre."""
+    if EXPORTADO.exists():
+        exportado = json.loads(EXPORTADO.read_text(encoding="utf-8"))
+        if any("principal" in p for p in exportado["paraderos"]):
+            return sorted(p["clave"] for p in exportado["paraderos"] if p.get("principal"))
+        nombres = {p["clave"]: p["nombre"] for p in exportado["paraderos"]}
+        elegidos = {v["id"]: v["paraderos"] for v in exportado["variantes"]}
+    else:
+        nombres, elegidos = {}, {}
+    sugeridos = set()
+    for v in variantes:
+        lista = elegidos.get(v["id"], v["elegidas"])
+        if not lista:
+            continue
+        sugeridos |= {lista[0], lista[-1]}  # terminales de cada variante
+        sugeridos |= {k for k in lista if PRINCIPALES_SUGERIDOS.search(nombres.get(k, ""))}
+    return sorted(sugeridos)
+
+
 def puntaje(nombre):
     n = nombre.lower()
     if any(r in n for r in REFERENCIAS):
@@ -317,6 +340,7 @@ def main():
         print(f"{ramal:9} {sentido:6} {acc[-1] / 1000:5.1f} km  paradas Yandex={len(paradas):3}  "
               f"preseleccionadas={len(elegidas):2}  máx. desvío={max(p['off'] for p in paradas):.0f} m  "
               f"puntos de apoyo={sum(1 for p in paradas if p.get('apoyo'))}")
+    salida["principales"] = principales_sugeridos(salida["variantes"])
     datos = json.dumps(salida, ensure_ascii=False)
     (AQUI / "datos_editor.json").write_text(datos, encoding="utf-8")
     plantilla = (AQUI / "plantilla_editor.html").read_text(encoding="utf-8")

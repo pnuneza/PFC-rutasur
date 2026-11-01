@@ -2,7 +2,8 @@
 # ==========================================================
 # RutaSur v1.0 — aplicar_en_nube.sh
 # Prepara una base de datos vacía en la nube (Neon) para producción:
-#   1. Esquema completo, extensiones y rol rutasur_app (aplicar_esquema.sh)
+#   1. Esquema completo, extensiones y rol rutasur_app (aplicar_esquema.sh), o, si la
+#      base ya existe, las migraciones de database/migraciones
 #   2. Ruta real de la línea LB (datos_reales/ruta_lb.sql)
 # NO carga datos demo: en producción no debe haber cuentas con contraseñas conocidas.
 #
@@ -45,7 +46,12 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Una base que ya tiene el esquema no se vuelve a crear (evita borrar datos por error)
 if psql "$DATABASE_URL" -tAc "SELECT to_regclass('public.linea') IS NOT NULL" | grep -q t; then
-    echo "La base ya tiene el esquema de RutaSur: solo se actualiza la ruta."
+    echo "La base ya tiene el esquema de RutaSur: se aplican las migraciones y se actualiza la ruta."
+    # Cambios del esquema posteriores a su creación; cada uno se puede aplicar varias veces
+    for migracion in "$DIR"/migraciones/*.sql; do
+        echo "  migración $(basename "$migracion")"
+        psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -q -f "$migracion"
+    done
 else
     bash "$DIR/aplicar_esquema.sh"
 fi

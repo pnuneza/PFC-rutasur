@@ -72,6 +72,10 @@ abstract interface class PreferenciasPasajero {
   Future<void> marcarBienvenidaVista();
   Future<List<String>> favoritos();
   Future<void> guardarFavoritos(List<String> codigos);
+
+  /// Sentido elegido en el mapa: bajada, subida o ambos (null). Se recuerda (0.6.1).
+  Future<Sentido?> sentidoElegido();
+  Future<void> guardarSentido(Sentido? sentido);
 }
 
 /// Ubicación del pasajero, solo mientras usa la app (no en segundo plano).
