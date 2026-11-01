@@ -22,6 +22,8 @@ class MapaRuta extends StatelessWidget {
     this.ubicacionUsuario,
     this.controlador,
     this.mostrarTeselas = true,
+    this.siempreVisibles = const {},
+    this.lineaCompleta,
   });
 
   final Linea linea;
@@ -40,9 +42,17 @@ class MapaRuta extends StatelessWidget {
   /// Fondo de OpenStreetMap; las pruebas lo omiten porque no tienen internet.
   final bool mostrarTeselas;
 
+  /// Paraderos que se ven a cualquier zoom aunque no sean principales: favoritos y el
+  /// más cercano (0.6.1).
+  final Set<String> siempreVisibles;
+
+  /// Línea con todas sus variantes: fija el encuadre y el área permitida, que no deben
+  /// cambiar al filtrar por sentido (la cámara quedaría fuera del área, D-14).
+  final Linea? lineaCompleta;
+
   @override
   Widget build(BuildContext context) {
-    final puntos = [for (final v in linea.variantes) ...v.trazado];
+    final puntos = [for (final v in (lineaCompleta ?? linea).variantes) ...v.trazado];
     final limites = LatLngBounds.fromPoints(puntos);
     final comun = tramoComun(linea);
 
@@ -84,20 +94,10 @@ class MapaRuta extends StatelessWidget {
               Polyline(points: comun, color: ColoresRutaSur.tramoComun, strokeWidth: 7),
           ],
         ),
-        MarkerLayer(
-          markers: [
-            for (final paradero in paraderos)
-              Marker(
-                point: paradero.ubicacion,
-                // Área táctil de 48 dp (pauta de Android); el círculo visible sigue de 18
-                width: 48,
-                height: 48,
-                child: MarcadorParadero(
-                  paradero: paradero,
-                  alTocar: () => alTocarParadero(paradero),
-                ),
-              ),
-          ],
+        _CapaParaderos(
+          paraderos: paraderos,
+          siempreVisibles: siempreVisibles,
+          alTocar: alTocarParadero,
         ),
         if (ubicacionUsuario != null)
           MarkerLayer(
@@ -147,4 +147,46 @@ class MapaRuta extends StatelessWidget {
         LatLng(b.south - 0.02, b.west - 0.02),
         LatLng(b.north + 0.02, b.east + 0.02),
       );
+}
+
+/// Zoom desde el que se ven todos los paraderos; más lejos, solo los principales (0.6.1).
+const double zoomTodosLosParaderos = 14;
+
+/// Con el mapa alejado solo se dibujan los paraderos principales (plazas, cruces,
+/// terminales), los favoritos y el más cercano: con 80 paraderos a la vez, el mapa de
+/// la ruta completa no se entendía (prueba con usuario del 01/11/2026).
+class _CapaParaderos extends StatelessWidget {
+  const _CapaParaderos({
+    required this.paraderos,
+    required this.siempreVisibles,
+    required this.alTocar,
+  });
+
+  final List<ParaderoEnMapa> paraderos;
+  final Set<String> siempreVisibles;
+  final ValueChanged<ParaderoEnMapa> alTocar;
+
+  @override
+  Widget build(BuildContext context) {
+    // Se reconstruye cada vez que cambia la cámara
+    final cerca = MapCamera.of(context).zoom >= zoomTodosLosParaderos;
+    return MarkerLayer(
+      markers: [
+        for (final paradero in paraderos)
+          if (cerca || paradero.principal || siempreVisibles.contains(paradero.codigo))
+            Marker(
+              point: paradero.ubicacion,
+              // Área táctil de 48 dp (pauta de Android); el círculo visible sigue de 18
+              width: 48,
+              height: 48,
+              child: MarcadorParadero(
+                key: ValueKey('marcador-${paradero.codigo}'),
+                paradero: paradero,
+                destacado: paradero.principal,
+                alTocar: () => alTocar(paradero),
+              ),
+            ),
+      ],
+    );
+  }
 }

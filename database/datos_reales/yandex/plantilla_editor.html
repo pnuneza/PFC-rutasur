@@ -47,7 +47,8 @@ aside { background: var(--panel); border-right: 1px solid var(--line); display: 
 .resumen .meta b { color: var(--fg); font-family: var(--mono); font-weight: 500; }
 .ayuda { font-size: 12.5px; color: var(--muted); }
 ol.lista { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; min-height: 0; }
-ol.lista li { display: grid; grid-template-columns: 28px 1fr auto; gap: 4px 10px; align-items: center;
+ol.lista li .estrella { border: 0; background: none; font-size: 22px; line-height: 1; cursor: pointer; color: #8A6100; padding: 2px 4px; }
+ol.lista li { display: grid; grid-template-columns: 28px 1fr auto auto; gap: 4px 10px; align-items: center;
   padding: 8px 16px; border-bottom: 1px solid var(--line); }
 ol.lista li.activo { background: color-mix(in srgb, var(--primario) 10%, transparent); }
 .num { font: 500 12px var(--mono); color: var(--muted); text-align: right; }
@@ -91,7 +92,7 @@ textarea#salida { width: 100%; height: 120px; font: 11px var(--mono); }
     <div class="resumen">
       <div id="titulo-variante" style="font-weight:600"></div>
       <div class="meta" id="meta"></div>
-      <div class="ayuda">Toca un punto gris del mapa para agregarlo como paradero (los anaranjados son puntos de apoyo donde Yandex no tiene paradas, como el tramo de Yanayaco); toca un número para quitarlo. Corrige los nombres en la lista: así los verá el pasajero. Los paraderos del tramo común se comparten entre Mollebaya y Cerrillos.</div>
+      <div class="ayuda">Toca un punto gris del mapa para agregarlo como paradero (los anaranjados son puntos de apoyo donde Yandex no tiene paradas, como el tramo de Yanayaco); toca un número para quitarlo. Corrige los nombres en la lista: así los verá el pasajero. Los paraderos del tramo común se comparten entre Mollebaya y Cerrillos. Marca con ★ los <b>principales</b> (plazas, cruces, terminales: los puntos donde la gente se ubica); la app solo muestra esos con el mapa alejado y los demás al acercarse.</div>
     </div>
     <ol class="lista" id="lista"></ol>
     <textarea id="salida" hidden aria-label="Resultado para copiar"></textarea>
@@ -128,6 +129,8 @@ function sanear() {
     estado.sel[v.id] = [...new Set([...guardadas, ...(v.obligatorias || [])])];
   }
   for (const [k, p] of Object.entries(DATOS.paradas)) if (!estado.nombres[k]) estado.nombres[k] = p.nombre;
+  // Paraderos principales (0.6.1): si nunca se marcaron, se parte de la sugerencia
+  if (!Array.isArray(estado.principales)) estado.principales = (DATOS.principales || []).slice();
   guardar();
 }
 
@@ -149,7 +152,7 @@ function inicial() {
   const sel = {}; const nombres = {};
   for (const v of DATOS.variantes) sel[v.id] = v.elegidas.slice();
   for (const [k, p] of Object.entries(DATOS.paradas)) nombres[k] = p.nombre;
-  return { sel, nombres };
+  return { sel, nombres, principales: (DATOS.principales || []).slice() };
 }
 function guardar() { try { localStorage.setItem(CLAVE_LS, JSON.stringify(estado)); } catch (e) {} }
 
@@ -175,6 +178,14 @@ function alternar(clave, poner) {
     estado.sel[v.id] = [...s];
   }
   guardar(); dibujar();
+}
+
+const esPrincipal = clave => estado.principales.includes(clave);
+function alternarPrincipal(clave) {
+  estado.principales = esPrincipal(clave)
+    ? estado.principales.filter(k => k !== clave) : [...estado.principales, clave];
+  guardar(); dibujar();
+  aviso(esPrincipal(clave) ? 'Marcado como principal' : 'Ya no es principal');
 }
 
 function ordenadas(v) {
@@ -203,7 +214,9 @@ function dibujar(encuadrar) {
   const lista = ordenadas(v);
   lista.forEach(([clave, d], i) => {
     const p = DATOS.paradas[clave];
-    const icono = L.divIcon({ className: '', html: `<div class="marcador" style="background:${COLOR[v.ramal]};width:24px;height:24px">${i + 1}</div>`, iconSize: [24, 24], iconAnchor: [12, 12] });
+    const t = esPrincipal(clave) ? 30 : 24;
+    const borde = esPrincipal(clave) ? 'box-shadow:0 0 0 3px #F2B705;' : '';
+    const icono = L.divIcon({ className: '', html: `<div class="marcador" style="background:${COLOR[v.ramal]};width:${t}px;height:${t}px;${borde}">${i + 1}</div>`, iconSize: [t, t], iconAnchor: [t / 2, t / 2] });
     const m = L.marker([p.lat, p.lon], { icon: icono, keyboard: true, title: estado.nombres[clave] }).addTo(capaSel);
     const cont = document.createElement('div');
     cont.innerHTML = `<b></b><small></small><br><button class="sec" type="button">Quitar paradero</button>`;
@@ -222,7 +235,7 @@ function pintarLista(v, lista) {
   const gaps = lista.slice(1).map((p, i) => p[1] - lista[i][1]);
   const maxGap = gaps.length ? Math.max(...gaps) : 0;
   document.getElementById('meta').innerHTML =
-    `<b>${lista.length}</b> paraderos · recorrido <b>${(v.longitud_m / 1000).toFixed(1)} km</b> · separación máxima <b>${maxGap} m</b> · ${v.paradas.length} puntos en Yandex`;
+    `<b>${lista.length}</b> paraderos (<b>${lista.filter(p => esPrincipal(p[0])).length}</b> principales ★) · recorrido <b>${(v.longitud_m / 1000).toFixed(1)} km</b> · separación máxima <b>${maxGap} m</b> · ${v.paradas.length} puntos en Yandex`;
   const ol = document.getElementById('lista'); ol.innerHTML = '';
   lista.forEach(([clave, d], i) => {
     if (i > 0 && d - lista[i - 1][1] > 900) {
@@ -231,7 +244,9 @@ function pintarLista(v, lista) {
       ol.appendChild(h);
     }
     const li = document.createElement('li'); li.dataset.clave = clave;
-    li.innerHTML = `<span class="num">${i + 1}</span><input class="nom" id="n-${v.id}-${i}" aria-label="Nombre del paradero ${i + 1}"><button class="quitar" type="button" aria-label="Quitar paradero">×</button><span class="km">km ${(d / 1000).toFixed(2)}</span>`;
+    const pr = esPrincipal(clave);
+    li.innerHTML = `<span class="num">${i + 1}</span><input class="nom" id="n-${v.id}-${i}" aria-label="Nombre del paradero ${i + 1}"><button class="estrella" type="button" aria-pressed="${pr}" title="Principal: se ve con el mapa alejado">${pr ? '★' : '☆'}</button><button class="quitar" type="button" aria-label="Quitar paradero">×</button><span class="km">km ${(d / 1000).toFixed(2)}${pr ? ' · principal' : ''}</span>`;
+    li.querySelector('.estrella').onclick = () => alternarPrincipal(clave);
     const inp = li.querySelector('input'); inp.value = estado.nombres[clave];
     inp.addEventListener('change', () => { estado.nombres[clave] = inp.value.trim() || DATOS.paradas[clave].nombre; guardar(); dibujar(); });
     inp.addEventListener('focus', () => { const p = DATOS.paradas[clave]; mapa.panTo([p.lat, p.lon]); marcarFila(clave); });
@@ -260,7 +275,7 @@ function resultado() {
   const usadas = new Set(Object.values(estado.sel).flat());
   return JSON.stringify({
     fuente: DATOS.fuente, generado: new Date().toISOString(),
-    paraderos: [...usadas].map(k => ({ clave: k, nombre: estado.nombres[k], lon: DATOS.paradas[k].lon, lat: DATOS.paradas[k].lat, nombre_yandex: DATOS.paradas[k].nombre_yandex })),
+    paraderos: [...usadas].map(k => ({ clave: k, nombre: estado.nombres[k], lon: DATOS.paradas[k].lon, lat: DATOS.paradas[k].lat, nombre_yandex: DATOS.paradas[k].nombre_yandex, principal: esPrincipal(k) })),
     variantes: DATOS.variantes.map(v => ({ id: v.id, ramal: v.ramal, sentido: v.sentido, destino: v.destino,
       trazado: v.trazado, paraderos: ordenadas(v).map(p => p[0]) })),
   });

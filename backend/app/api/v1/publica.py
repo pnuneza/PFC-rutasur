@@ -110,6 +110,7 @@ def obtener_linea(servicio: ServicioRutas = Depends(servicio_rutas)) -> Respuest
                     order=p.orden,
                     distance_from_start_m=p.distancia_desde_inicio_m,
                     shared_trunk=p.en_tramo_comun,
+                    main=p.principal,
                 )
                 for p in v.paraderos
             ],

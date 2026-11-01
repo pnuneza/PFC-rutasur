@@ -51,6 +51,12 @@ def leer_entradas():
     exportado = json.loads(EXPORTADO.read_text(encoding="utf-8"))
     nombres = {p["clave"]: p["nombre"].strip() for p in exportado["paraderos"]}
     elegidos = {v["id"]: v["paraderos"] for v in exportado["variantes"]}
+    # Principales: lo marcado en el editor o, si nunca se marcó, la sugerencia (0.6.1)
+    if any("principal" in p for p in exportado["paraderos"]):
+        principales = {p["clave"] for p in exportado["paraderos"] if p.get("principal")}
+    else:
+        principales = set(editor.get("principales", []))
+    editor["principales_elegidos"] = principales
     return editor, nombres, elegidos
 
 
@@ -150,7 +156,7 @@ def generar():
 
     lineas += [
         "-- 3. Paraderos reales (se actualizan por código si ya existen)",
-        "INSERT INTO paradero (codigo, nombre, referencia, ubicacion, en_tramo_comun, activo) VALUES",
+        "INSERT INTO paradero (codigo, nombre, referencia, ubicacion, en_tramo_comun, principal, activo) VALUES",
     ]
     filas = []
     for clave in sorted(usados, key=lambda k: codigos[k]):
@@ -162,15 +168,17 @@ def generar():
         yandex = punto.get("nombre_yandex", "")
         referencia = yandex[:120] if yandex and normalizar(yandex) != normalizar(nombre) else None
         comun = "true" if len(usados[clave]) > 1 else "false"
+        principal = "true" if clave in editor["principales_elegidos"] else "false"
         filas.append(
             f"  ('{codigos[clave]}', {sql_texto(nombre)}, {sql_texto(referencia)}, "
-            f"ST_SetSRID(ST_MakePoint({punto['lon']}, {punto['lat']}), 4326), {comun}, true)"
+            f"ST_SetSRID(ST_MakePoint({punto['lon']}, {punto['lat']}), 4326), {comun}, {principal}, true)"
         )
     lineas += [",\n".join(filas)]
     lineas += [
         "ON CONFLICT (codigo) DO UPDATE",
         "   SET nombre = EXCLUDED.nombre, referencia = EXCLUDED.referencia,",
-        "       ubicacion = EXCLUDED.ubicacion, en_tramo_comun = EXCLUDED.en_tramo_comun, activo = true;",
+        "       ubicacion = EXCLUDED.ubicacion, en_tramo_comun = EXCLUDED.en_tramo_comun,",
+        "       principal = EXCLUDED.principal, activo = true;",
         "",
         "-- Los paraderos que ya no se usan (por ejemplo, los demo) quedan inactivos, no se borran",
         "UPDATE paradero p SET activo = false",
@@ -205,10 +213,13 @@ def generar():
     lineas += ["COMMIT;", ""]
     SALIDA.write_text("\n".join(lineas), encoding="utf-8")
 
-    print(f"{SALIDA.name}: {len(usados)} paraderos")
+    principales = [k for k in usados if k in editor["principales_elegidos"]]
+    print(f"{SALIDA.name}: {len(usados)} paraderos, {len(principales)} principales")
     for vid in ORDEN_VARIANTES:
         claves = por_variante[vid]
         print(f"  {vid:17} {len(claves):3} paraderos  {nombre_de(claves[0])} → {nombre_de(claves[-1])}")
+        print("     principales: " + " · ".join(
+            nombre_de(k) for k in claves if k in editor["principales_elegidos"]))
 
 
 if __name__ == "__main__":

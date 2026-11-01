@@ -58,6 +58,8 @@ CREATE TABLE paradero (
     referencia      VARCHAR(120),
     ubicacion       GEOMETRY(Point, 4326) NOT NULL,
     en_tramo_comun  BOOLEAN               NOT NULL DEFAULT false,
+    -- Principal: lugar de referencia (plaza, cruce, terminal) que se ve con el mapa alejado
+    principal       BOOLEAN               NOT NULL DEFAULT false,
     activo          BOOLEAN               NOT NULL DEFAULT true,
 
     CONSTRAINT pk_paradero          PRIMARY KEY (id),
@@ -239,5 +241,6 @@ COMMENT ON TABLE registro_evento    IS 'Auditoría (RF-020). Sin direcciones IP.
 
 COMMENT ON COLUMN variante.longitud_m IS 'Longitud del trazado en metros; la calcula el trigger trg_variante_longitud.';
 COMMENT ON COLUMN paradero_variante.distancia_desde_inicio_m IS 'Distancia sobre el trazado desde el inicio de la variante; la calcula fn_recalcular_paraderos_variante().';
+COMMENT ON COLUMN paradero.principal IS 'Lugar de referencia que la app muestra con el mapa alejado; los demás aparecen al acercarse.';
 COMMENT ON COLUMN posicion.id IS 'UUID generado en el teléfono: si un lote se reenvía, la posición no se duplica.';
 COMMENT ON COLUMN cuenta_conductor.hash_contrasena IS 'Hash bcrypt. Nunca se guarda la contraseña.';
