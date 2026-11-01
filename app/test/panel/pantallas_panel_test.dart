@@ -99,7 +99,7 @@ void main() {
         find.descendant(of: find.byKey(const Key('indicador-transmitiendo')), matching: find.text('1')),
         findsOneWidget,
       );
-      expect(find.byKey(const Key('fila-07')), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('tabla-flota')), matching: find.text('07')), findsOneWidget);
       expect(find.text('Transmitiendo'), findsWidgets);
       expect(find.text('Inactiva'), findsOneWidget);
       expect(find.text('Mollebaya · va a Centro (2 de Mayo)'), findsOneWidget);

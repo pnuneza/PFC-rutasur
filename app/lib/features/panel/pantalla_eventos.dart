@@ -138,6 +138,7 @@ class _PantallaEventosState extends State<PantallaEventos> {
                 child: DropdownButtonFormField<TipoEvento?>(
                   key: const Key('filtro-tipo'),
                   initialValue: _tipo,
+                  isExpanded: true,
                   decoration: const InputDecoration(labelText: 'Tipo', border: OutlineInputBorder(), isDense: true),
                   items: [
                     const DropdownMenuItem(value: null, child: Text('Todos')),

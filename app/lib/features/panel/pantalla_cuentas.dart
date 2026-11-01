@@ -314,7 +314,7 @@ class _PantallaCuentasState extends State<PantallaCuentas> {
                     colorFondo: ColoresRutaSur.demoradoFondo,
                   )
                 : _estado(c.activa, 'Activa', 'Desactivada')),
-            DataCell(Wrap(spacing: 4, children: [
+            DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
               TextButton(
                 key: Key('restablecer-${c.usuario}'),
                 onPressed: _ocupado ? null : () => _actuar(c, AccionCuenta.restablecer, panel: panel),
@@ -458,6 +458,7 @@ class _DialogoCuentaConductorState extends State<_DialogoCuentaConductor> {
                   DropdownButtonFormField<UnidadAdmin>(
                     key: const Key('campo-unidad'),
                     initialValue: _unidad,
+                    isExpanded: true,
                     decoration: const InputDecoration(labelText: 'Unidad', border: OutlineInputBorder()),
                     items: [
                       for (final u in widget.unidades)

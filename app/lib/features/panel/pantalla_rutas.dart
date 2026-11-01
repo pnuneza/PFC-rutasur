@@ -243,8 +243,9 @@ class _PantallaRutasState extends State<PantallaRutas> {
               final derecha = Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (_edicion != null) _formulario(v),
-                  Expanded(child: _mapaVariante(v)),
+                  // El formulario se desplaza si no cabe; el mapa conserva al menos 2/5
+                  if (_edicion != null) Flexible(flex: 3, child: SingleChildScrollView(child: _formulario(v))),
+                  Expanded(flex: 2, child: _mapaVariante(v)),
                 ],
               );
               if (limites.maxWidth >= 1000) {
