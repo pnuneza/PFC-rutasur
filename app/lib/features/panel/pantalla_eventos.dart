@@ -51,10 +51,15 @@ class _PantallaEventosState extends State<PantallaEventos> {
 
   static DateTime _soloFecha(DateTime d) => DateTime(d.year, d.month, d.day);
 
+  /// El servidor cuenta los 30 días desde este momento, no desde la medianoche: el primer
+  /// día completo que se puede pedir es el de hace 29 días.
+  DateTime get _primerDiaPermitido =>
+      _soloFecha(widget.reloj()).subtract(const Duration(days: diasMaximosEventos - 1));
+
   /// Error de los filtros, o null si son válidos (P06 A-05 #1).
   String? get _errorFiltros {
     if (_desde.isAfter(_hasta)) return 'La fecha inicial debe ser anterior o igual a la final.';
-    final limite = _soloFecha(widget.reloj()).subtract(const Duration(days: diasMaximosEventos));
+    final limite = _primerDiaPermitido;
     if (_desde.isBefore(limite)) {
       return 'Solo se pueden consultar los últimos $diasMaximosEventos días (RN-012).';
     }
@@ -94,7 +99,7 @@ class _PantallaEventosState extends State<PantallaEventos> {
     final elegida = await showDatePicker(
       context: context,
       initialDate: inicial ? _desde : _hasta,
-      firstDate: hoy.subtract(const Duration(days: diasMaximosEventos)),
+      firstDate: _primerDiaPermitido,
       lastDate: hoy,
     );
     if (elegida == null) return;
