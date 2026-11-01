@@ -9,6 +9,10 @@ import 'package:rutasur/features/conductor/controlador_conductor.dart';
 import 'fakes_conductor.dart';
 
 Future<Escenario> abrirApp(WidgetTester tester, {Escenario? escenario}) async {
+  // Pantalla de un teléfono común (360 × 800 dp), no la de 800 × 600 de las pruebas
+  tester.view.physicalSize = const Size(1080, 2400);
+  tester.view.devicePixelRatio = 3.0;
+  addTearDown(tester.view.reset);
   final e = escenario ?? Escenario();
   await tester.pumpWidget(AppConductor(controlador: e.controlador));
   await tester.pumpAndSettle();
@@ -28,7 +32,8 @@ void main() {
     await tester.enterText(find.byKey(const Key('clave')), 'corta');
     await tester.pump();
     // Se quitan espacios y mayúsculas mientras se escribe
-    expect(find.text('unidad07'), findsOneWidget);
+    final usuario = tester.widget<TextField>(find.byKey(const Key('usuario')));
+    expect(usuario.controller!.text, 'unidad07');
     expect(boton(tester, 'ingresar').onPressed, isNull);
 
     await tester.enterText(find.byKey(const Key('clave')), 'rutasur-demo');
@@ -41,6 +46,7 @@ void main() {
     e.servicio.falloIngreso = const ErrorServicio(estado: 401, codigo: 'INVALID_CREDENTIALS', mensaje: 'x');
     await tester.enterText(find.byKey(const Key('usuario')), 'unidad07');
     await tester.enterText(find.byKey(const Key('clave')), 'clave-mala-1');
+    await tester.pump();
     await tester.tap(find.byKey(const Key('ingresar')));
     await tester.pumpAndSettle();
     expect(find.textContaining('Usuario o contraseña incorrectos'), findsOneWidget);
