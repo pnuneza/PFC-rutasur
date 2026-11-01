@@ -6,7 +6,9 @@ Nominatim) proyectadas sobre los trazados. Para cada lugar:
 - si ya hay un paradero elegido a 80 m o menos en esa variante, se le cambia el nombre;
 - si no, se elige el punto candidato (Yandex o de apoyo) más cercano al lugar.
 
-Uso:  py propuestas_chat.py            (modifica paraderos.json y muestra qué hizo)
+Uso:  py propuestas_chat.py [paraderos_anterior.json]
+      Modifica paraderos.json y muestra qué hizo. Si se da el archivo anterior, no toca
+      los paraderos que el autor agregó o renombró desde entonces.
 """
 
 import json
@@ -20,6 +22,7 @@ from preparar_editor import acumulado, dist, proyectar  # noqa: E402
 EDITOR = AQUI / "yandex" / "datos_editor.json"
 EXPORTADO = AQUI / "paraderos.json"
 SEPARACION_MINIMA_M = 150  # no dos paraderos del mismo sentido más cerca que esto
+JUNTOS_M = 120  # dos paraderos del mismo sentido más cerca que esto sobran
 CONSERVAR_M = SEPARACION_MINIMA_M  # un paradero con nombre de lugar conocido tan cerca no se toca
 LUGAR_CONOCIDO = ("óvalo", "grifo", "plaza", "unsa", "parque", "politécnico", "coliseo",
                   "restaurante", "club", "quinta", "puente", "cementerio", "picantería",
@@ -39,7 +42,7 @@ LUGARES = {
     "Yanayaco": (-16.48013, -71.45780, True, ["CERRILLO-IDA", "CERRILLO-VUELTA"]),
     "Cerrillo": (-16.47248, -71.46802, True, ["CERRILLO-IDA", "CERRILLO-VUELTA"]),
     "La Huaylla": (-16.47397, -71.47747, False, ["MOLLEBAYA-IDA", "MOLLEBAYA-VUELTA"]),
-    "Reservorio Guardia Civil": (-16.42554, -71.51523, True, None),
+    "Reservorio de Guardia Civil": (-16.42554, -71.51523, True, None),
     "Tottus Mall Aventura": (-16.41603, -71.51416, True, None),
     "Feria del Altiplano (Av. Venezuela)": (-16.40180, -71.51720, True, None),
     "El Tablón (Av. Independencia)": (-16.39925, -71.52158, False, None),
@@ -71,9 +74,14 @@ def separacion_cerrillo(ed):
     return resultado
 
 
-def aplicar():
+def aplicar(anterior=None):
+    """anterior: paraderos.json previo; lo que el autor agregó o renombró desde él no se toca."""
     ed = json.loads(EDITOR.read_text(encoding="utf-8"))
     ex = json.loads(EXPORTADO.read_text(encoding="utf-8"))
+    protegidos = set()
+    if anterior:
+        previo = {p["clave"]: p["nombre"] for p in json.loads(Path(anterior).read_text(encoding="utf-8"))["paraderos"]}
+        protegidos = {p["clave"] for p in ex["paraderos"] if previo.get(p["clave"]) != p["nombre"]}
     nombres = {p["clave"]: p["nombre"] for p in ex["paraderos"]}
     principales = {p["clave"] for p in ex["paraderos"] if p.get("principal")}
     variantes = {v["id"]: v for v in ed["variantes"]}
@@ -97,7 +105,8 @@ def aplicar():
                 default=(1e9, None),
             )
             actual = nombres.get(cerca[1], "") if cerca[1] else ""
-            if cerca[0] <= SEPARACION_MINIMA_M and (actual == nombre or es_solo_calle(actual)):
+            propio = cerca[1] in protegidos
+            if cerca[0] <= SEPARACION_MINIMA_M and (actual == nombre or (es_solo_calle(actual) and not propio)):
                 # Ya hay un paradero ahí con nombre de calle: se le pone el que usa la gente
                 clave = cerca[1]
                 accion = f"renombra «{actual}»"
@@ -119,6 +128,21 @@ def aplicar():
     for vid, (lon, lat) in separacion_cerrillo(ed).items():
         ubicar("Don Abdón", lon, lat, True, [vid, vid.replace("MOLLEBAYA", "CERRILLO")])
         cambios.append(f"{'':17} (Don Abdón calculado donde el Cerrillo se separa de Mollebaya)")
+
+    # Limpieza: un paradero con solo nombre de calle a menos de 120 m de otro con nombre de
+    # lugar (del mismo sentido) sobra; queda el que la gente reconoce.
+    for vid, lista in elegidos.items():
+        for k in list(lista):
+            if k in protegidos or not es_solo_calle(nombres.get(k, "")):
+                continue
+            vecino = min(
+                ((dist(punto(ed, k), punto(ed, o)), o) for o in lista
+                 if o != k and not es_solo_calle(nombres.get(o, ""))),
+                default=(1e9, None),
+            )
+            if vecino[0] < JUNTOS_M:
+                lista.remove(k)
+                cambios.append(f"{vid:17} quita «{nombres.get(k)}» (a {round(vecino[0])} m de «{nombres.get(vecino[1])}»)")
 
     # Se guarda en el formato del editor, en el orden del trazado
     usados = {k for lista in elegidos.values() for k in lista}
@@ -142,4 +166,4 @@ def aplicar():
 
 
 if __name__ == "__main__":
-    aplicar()
+    aplicar(sys.argv[1] if len(sys.argv) > 1 else None)
