@@ -28,9 +28,13 @@ paréntesis van el primer y el tercer cuartil.
 - **Domingos:** el grupo casi no tiene mensajes (47 en 17 domingos, frente a 1500–2300
   por cada otro día de la semana). Con estos datos no se puede afirmar que no haya
   servicio; lo que se sabe es que nadie despacha por el chat.
-- **Última salida:** hacia las 16:30–16:45 sale la última combi de bajada desde Santa Ana.
-  Los retornos desde el Centro siguen después. El horario que hoy tiene la línea en el
-  panel es de 05:00 a 21:00, y conviene confirmarlo con la empresa.
+- **Última salida y fin del servicio:** hacia las 16:30–16:45 sale la última combi de
+  bajada desde Santa Ana. Los retornos desde el Centro siguen después. El último mensaje
+  del día sobre una combi «de retorno» o «de subida» llega a las 18:34 (mediana); en 9 de
+  cada 10 días hábiles, antes de las 19:20. Después de las 19:00 el grupo casi no tiene
+  mensajes, y Pierre confirma que de noche no salen combis, aunque el horario es irregular.
+  Por eso, desde el 01/11 el horario referencial de la línea es **de 05:00 a 19:30**
+  (antes era el de ejemplo, de 05:00 a 21:00). Migración `002_horario_real.sql`.
 
 ## Tiempos entre puntos de control
 
