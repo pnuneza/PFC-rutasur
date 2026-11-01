@@ -27,11 +27,19 @@ class SinConexion implements Exception {
 
 /// El servicio respondió con un error (códigos de la Tabla 55 de P06).
 class ErrorServicio implements Exception {
-  const ErrorServicio({required this.estado, required this.codigo, required this.mensaje});
+  const ErrorServicio({
+    required this.estado,
+    required this.codigo,
+    required this.mensaje,
+    this.reintentarEnS,
+  });
 
   final int estado;
   final String codigo;
   final String mensaje;
+
+  /// Segundos de espera de ACCOUNT_LOCKED y RATE_LIMITED (meta.retry_after_s).
+  final int? reintentarEnS;
 
   @override
   String toString() => 'ErrorServicio($estado $codigo: $mensaje)';

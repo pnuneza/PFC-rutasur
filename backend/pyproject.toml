@@ -1,6 +1,6 @@
 [project]
 name = "rutasur-api"
-version = "0.4.0"
+version = "0.5.0"
 description = "RutaSur v1.0 — servicio en la nube: API REST de seguimiento de buses del Cono Sur de Arequipa"
 requires-python = ">=3.12,<3.13"
 authors = [{ name = "Pierre Xavi Stephan Núñez Aco" }]

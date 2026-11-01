@@ -1,0 +1,78 @@
+# ==========================================================
+# RutaSur v1.0 — instalables de Android (APK)
+# Compila la app del pasajero y la del conductor contra el servicio en la nube y
+# deja los .apk como artefactos de la ejecución: se descargan desde la pestaña
+# Actions → esta ejecución → Artifacts, y se instalan en el teléfono.
+# Mientras no exista la clave de firma propia (Módulo 5), se firman con la de
+# depuración: sirven para pruebas, no para publicar.
+# ==========================================================
+name: APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    paths: ["app/**", ".github/workflows/apk.yml"]
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  API_URL: https://rutasur-api.onrender.com
+
+jobs:
+  apk:
+    name: APK pasajero y conductor
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Dependencias
+        run: flutter pub get
+
+      - name: APK del conductor
+        run: |
+          set -o pipefail
+          flutter build apk --release --flavor conductor \
+            -t lib/entrypoints/main_conductor.dart \
+            --dart-define=API_URL=$API_URL 2>&1 | tee ../compilacion.log
+
+      - name: APK del pasajero
+        run: |
+          set -o pipefail
+          flutter build apk --release --flavor pasajero \
+            -t lib/entrypoints/main_pasajero.dart \
+            --dart-define=API_URL=$API_URL 2>&1 | tee ../compilacion.log
+
+      - name: Nombres con la versión
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | cut -d' ' -f2 | cut -d+ -f1)
+          mkdir -p ../instalables
+          cp build/app/outputs/flutter-apk/app-conductor-release.apk ../instalables/rutasur-conductor-$VERSION.apk
+          cp build/app/outputs/flutter-apk/app-pasajero-release.apk ../instalables/rutasur-pasajero-$VERSION.apk
+          ls -la ../instalables
+
+      - name: Errores de la compilación
+        if: failure()
+        run: python3 ../.github/scripts/errores_gradle.py ../compilacion.log
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rutasur-apk
+          path: instalables/*.apk
+          retention-days: 30

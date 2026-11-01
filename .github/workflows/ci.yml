@@ -132,4 +132,8 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
       - name: Pruebas unitarias y de widgets
-        run: flutter test
+        run: flutter test --reporter json > resultados-flutter.json
+
+      - name: Detalle de las pruebas fallidas
+        if: failure()
+        run: python3 ../.github/scripts/fallas_flutter.py resultados-flutter.json
