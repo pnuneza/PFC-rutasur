@@ -8,6 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+.enlaces { display: flex; gap: 12px; margin: 8px 0; }
+.enlaces a { font-weight: 600; color: #0F5257; }
 /* Herramienta de trabajo: panel de lista a la izquierda, mapa a la derecha; en teléfono, mapa arriba. */
 :root {
   --bg: #F6F8F8; --panel: #FFFFFF; --fg: #191C1C; --muted: #56605F; --line: #D9E0DF;
@@ -92,7 +94,7 @@ textarea#salida { width: 100%; height: 120px; font: 11px var(--mono); }
     <div class="resumen">
       <div id="titulo-variante" style="font-weight:600"></div>
       <div class="meta" id="meta"></div>
-      <div class="ayuda">Toca un punto gris del mapa para agregarlo como paradero (los anaranjados son puntos de apoyo donde Yandex no tiene paradas, como el tramo de Yanayaco); toca un número para quitarlo. Corrige los nombres en la lista: así los verá el pasajero. Los paraderos del tramo común se comparten entre Mollebaya y Cerrillos. Marca con ★ los <b>principales</b> (plazas, cruces, terminales: los puntos donde la gente se ubica); la app solo muestra esos con el mapa alejado y los demás al acercarse.</div>
+      <div class="ayuda">Toca un punto gris del mapa para verlo en <b>Google Maps</b> o <b>Street View</b> y agregarlo como paradero; arriba a la derecha puedes cambiar a <b>Satélite con calles</b> (los anaranjados son puntos de apoyo donde Yandex no tiene paradas, como el tramo de Yanayaco); toca un número para quitarlo. Corrige los nombres en la lista: así los verá el pasajero. Los paraderos del tramo común se comparten entre Mollebaya y Cerrillos. Marca con ★ los <b>principales</b> (plazas, cruces, terminales: los puntos donde la gente se ubica); la app solo muestra esos con el mapa alejado y los demás al acercarse.</div>
     </div>
     <ol class="lista" id="lista"></ol>
     <textarea id="salida" hidden aria-label="Resultado para copiar"></textarea>
@@ -161,10 +163,25 @@ const variante = id => DATOS.variantes.find(v => v.id === id);
 
 // Mapa
 const mapa = L.map('mapa', { zoomControl: true });
-L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-  maxZoom: 20, subdomains: 'abcd',
-  attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/">CARTO</a> · Datos de ruta: Yandex Maps y GPX propio (BRouter)'
-}).addTo(mapa);
+// Mapas sin clave (CARTO empezó a pedir una en 2026). Esri permite uso no comercial con
+// atribución; el satélite con calles ayuda a reconocer plazas, grifos y locales.
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services';
+const atribucionEsri = 'Mapa © Esri, HERE, Garmin, OpenStreetMap · Imágenes © Esri, Maxar · Datos de ruta: Yandex Maps y GPX propio (BRouter)';
+const calles = L.tileLayer(`${ESRI}/World_Street_Map/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 19, attribution: atribucionEsri });
+const satelite = L.layerGroup([
+  L.tileLayer(`${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 19, attribution: atribucionEsri }),
+  L.tileLayer(`${ESRI}/Reference/World_Transportation/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 19 }),
+  L.tileLayer(`${ESRI}/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}`, { maxZoom: 19 }),
+]);
+calles.addTo(mapa);
+L.control.layers({ 'Calles': calles, 'Satélite con calles': satelite }, null, { position: 'topright', collapsed: false }).addTo(mapa);
+
+// Ver el punto real antes de nombrarlo: Google Maps (locales y reseñas) y Street View (fachadas)
+function enlacesGoogle(lat, lon) {
+  const c = `${lat},${lon}`;
+  return `<div class="enlaces"><a href="https://www.google.com/maps/search/?api=1&query=${c}" target="_blank" rel="noopener">Google Maps ↗</a>` +
+         `<a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${c}" target="_blank" rel="noopener">Street View ↗</a></div>`;
+}
 const capaFondo = L.layerGroup().addTo(mapa), capaRuta = L.layerGroup().addTo(mapa),
       capaPuntos = L.layerGroup().addTo(mapa), capaSel = L.layerGroup().addTo(mapa);
 const ll = c => [c[1], c[0]];
@@ -208,7 +225,15 @@ function dibujar(encuadrar) {
     L.circleMarker([p.lat, p.lon], { radius: apoyo ? 4 : 5, color: apoyo ? '#B4410B' : '#5E6968', weight: 1,
                                      fillColor: apoyo ? '#FBE3D3' : '#FFFFFF', fillOpacity: 1 })
       .bindTooltip(`${p.nombre_yandex || 'Punto de apoyo (Yandex no tiene parada aquí)'} · ${(d / 1000).toFixed(2)} km`, { direction: 'top' })
-      .on('click', () => { alternar(clave, true); aviso('Paradero agregado'); })
+      .bindPopup(() => {
+        // Primero se mira qué hay en el lugar; luego se agrega
+        const c = document.createElement('div');
+        c.innerHTML = `<b></b><br><small></small>${enlacesGoogle(p.lat, p.lon)}<button class="prim" type="button">Agregar paradero</button>`;
+        c.querySelector('b').textContent = p.nombre_yandex || 'Punto de apoyo';
+        c.querySelector('small').textContent = `km ${(d / 1000).toFixed(2)}`;
+        c.querySelector('button').onclick = () => { mapa.closePopup(); alternar(clave, true); aviso('Paradero agregado'); };
+        return c;
+      })
       .addTo(capaPuntos);
   }
   const lista = ordenadas(v);
@@ -219,7 +244,7 @@ function dibujar(encuadrar) {
     const icono = L.divIcon({ className: '', html: `<div class="marcador" style="background:${COLOR[v.ramal]};width:${t}px;height:${t}px;${borde}">${i + 1}</div>`, iconSize: [t, t], iconAnchor: [t / 2, t / 2] });
     const m = L.marker([p.lat, p.lon], { icon: icono, keyboard: true, title: estado.nombres[clave] }).addTo(capaSel);
     const cont = document.createElement('div');
-    cont.innerHTML = `<b></b><small></small><br><button class="sec" type="button">Quitar paradero</button>`;
+    cont.innerHTML = `<b></b><small></small>${enlacesGoogle(p.lat, p.lon)}<button class="sec" type="button">Quitar paradero</button>`;
     cont.querySelector('b').textContent = `${i + 1}. ${estado.nombres[clave]}`;
     cont.querySelector('small').textContent = `${p.nombre_yandex ? 'Yandex: ' + p.nombre_yandex : 'Punto de apoyo: ponle el nombre que usa la gente'} · km ${(d / 1000).toFixed(2)}`;
     cont.querySelector('button').onclick = () => { mapa.closePopup(); alternar(clave, false); aviso('Paradero quitado'); };
