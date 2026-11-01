@@ -108,7 +108,9 @@ const COLOR = { MOLLEBAYA: getComputedStyle(document.documentElement).getPropert
                 CERRILLO: getComputedStyle(document.documentElement).getPropertyValue('--cerrillo').trim() || '#B4410B' };
 const ETIQ = { 'MOLLEBAYA-IDA': 'Mollebaya → Centro', 'MOLLEBAYA-VUELTA': 'Centro → Mollebaya',
                'CERRILLO-IDA': 'Cerrillos → Centro', 'CERRILLO-VUELTA': 'Centro → Cerrillos' };
-const CLAVE_LS = 'rutasur-paraderos-v3';
+// El estado del navegador va ligado a la versión del paraderos.json del repositorio: si
+// el archivo cambió (por ejemplo, se le sumaron los lugares del chat), se abre el nuevo.
+const CLAVE_LS = DATOS.guardado ? `rutasur-paraderos-${DATOS.guardado.version}` : 'rutasur-paraderos-v3';
 const CLAVE_LS_ANTERIOR = 'rutasur-paraderos-v2';
 // Variantes cuyo trazado cambió desde la versión anterior del editor: empiezan de nuevo
 const RENOVADAS = ['CERRILLO-IDA', 'CERRILLO-VUELTA'];  // trazados propios del 01/11/2026
@@ -118,6 +120,7 @@ let estado = inicial();
 try {
   const g = JSON.parse(localStorage.getItem(CLAVE_LS));
   if (g && g.sel && g.nombres) estado = g;
+  else if (DATOS.guardado) estado = desdeGuardado(DATOS.guardado);
   else migrarAnterior(JSON.parse(localStorage.getItem(CLAVE_LS_ANTERIOR)));
 } catch (e) {}
 sanear();
@@ -149,6 +152,13 @@ function migrarAnterior(g) {
     estado.sel[v.id] = [...new Set([...conservadas, ...(v.obligatorias || [])])];
   }
   guardar();
+}
+function desdeGuardado(g) {
+  const e = inicial();
+  for (const v of DATOS.variantes) if (g.sel[v.id]) e.sel[v.id] = g.sel[v.id].slice();
+  Object.assign(e.nombres, g.nombres);
+  e.principales = g.principales.slice();
+  return e;
 }
 function inicial() {
   const sel = {}; const nombres = {};
