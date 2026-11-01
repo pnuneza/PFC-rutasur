@@ -225,7 +225,14 @@ class _BarraBusqueda extends StatelessWidget {
             children: [
               Icon(Icons.search, color: ColoresRutaSur.textoSecundario),
               SizedBox(width: 12),
-              Text('Buscar paradero', style: TextStyle(color: ColoresRutaSur.textoSecundario)),
+              Expanded(
+                child: Text(
+                  'Buscar paradero',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: ColoresRutaSur.textoSecundario),
+                ),
+              ),
             ],
           ),
         ),

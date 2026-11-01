@@ -89,8 +89,9 @@ class MapaRuta extends StatelessWidget {
             for (final paradero in paraderos)
               Marker(
                 point: paradero.ubicacion,
-                width: 36,
-                height: 36,
+                // Área táctil de 48 dp (pauta de Android); el círculo visible sigue de 18
+                width: 48,
+                height: 48,
                 child: MarcadorParadero(
                   paradero: paradero,
                   alTocar: () => alTocarParadero(paradero),
