@@ -136,6 +136,19 @@ jobs:
       - name: Pruebas unitarias y de widgets
         run: flutter test --reporter json > resultados-flutter.json
 
+      # Panel administrativo (Módulo 6): Flutter Web contra la API en la nube
+      - name: Panel web
+        run: |
+          set -o pipefail
+          flutter build web --release -t lib/entrypoints/main_panel.dart \
+            --dart-define=API_URL=https://rutasur-api.onrender.com 2>&1 | tee ../compilacion-web.log
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rutasur-panel-web
+          path: app/build/web
+          retention-days: 14
+
       - name: Detalle de los avisos del análisis
         if: failure()
         # «  error • mensaje • lib/a.dart:10:5 • codigo» → anotación en el archivo
@@ -148,3 +161,9 @@ jobs:
       - name: Detalle de las pruebas fallidas
         if: failure()
         run: python3 ../.github/scripts/fallas_flutter.py resultados-flutter.json
+
+      - name: Errores de la compilación web
+        if: failure()
+        run: |
+          grep -E "Error|error:" ../compilacion-web.log 2>/dev/null | head -20 |
+            sed 's/^/::error::/' || true

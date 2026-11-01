@@ -69,3 +69,29 @@ List<LatLng>? tramoComun(Linea linea) {
   }
   return null;
 }
+
+/// Distancia en metros de un punto al trazado más cercano (RN-003 en el formulario A-03a).
+///
+/// Proyecta sobre cada tramo en un plano local; para tramos de pocos cientos de metros
+/// el error es de centímetros. El servidor vuelve a validar con PostGIS.
+double distanciaAlTrazadoM(LatLng punto, List<LatLng> trazado) {
+  if (trazado.isEmpty) return double.infinity;
+  if (trazado.length == 1) return distanciaM(punto, trazado.first);
+  final k = cos(punto.latitude * pi / 180);
+  var minima = double.infinity;
+  for (var i = 0; i < trazado.length - 1; i++) {
+    final a = trazado[i];
+    final b = trazado[i + 1];
+    final ax = (a.longitude - punto.longitude) * k;
+    final ay = a.latitude - punto.latitude;
+    final dx = (b.longitude - a.longitude) * k;
+    final dy = b.latitude - a.latitude;
+    final largo = dx * dx + dy * dy;
+    final t = largo == 0 ? 0.0 : (-(ax * dx + ay * dy) / largo).clamp(0.0, 1.0);
+    final proyectado = LatLng(a.latitude + t * (b.latitude - a.latitude),
+        a.longitude + t * (b.longitude - a.longitude));
+    final d = distanciaM(punto, proyectado);
+    if (d < minima) minima = d;
+  }
+  return minima;
+}
