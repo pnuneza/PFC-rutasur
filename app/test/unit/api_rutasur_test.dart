@@ -53,6 +53,32 @@ void main() {
     expect(await api.llegadas('stp_001'), isEmpty);
   });
 
+  test('busca paraderos con el texto codificado en la consulta (RF-005)', () async {
+    final api = ApiRutaSur(
+      urlBase: 'http://servidor',
+      cliente: MockClient((peticion) async {
+        expect(peticion.url.path, '/api/v1/stops');
+        expect(peticion.url.queryParameters['q'], 'plaza characato');
+        return respuestaJson({
+          'data': [
+            {
+              'code': 'stp_010',
+              'name': 'Plaza de Characato',
+              'reference': null,
+              'lat': -16.469,
+              'lon': -71.4837,
+              'branches': ['MOLLEBAYA'],
+            },
+          ],
+          'meta': {'timestamp': 'x', 'count': 1},
+        }, 200);
+      }),
+    );
+    final encontrados = await api.buscarParaderos('plaza characato');
+    expect(encontrados.single.codigo, 'stp_010');
+    expect(encontrados.single.ramales, {Ramal.mollebaya});
+  });
+
   test('un error del servicio conserva su código estable (P06, Tabla 55)', () async {
     final api = ApiRutaSur(
       urlBase: 'http://servidor',
