@@ -84,7 +84,7 @@ void main() {
 
     expect(find.text('Unidad 07'), findsOneWidget);
     expect(find.text('Va a Centro (2 de Mayo)'), findsOneWidget);
-    expect(find.text('Hacia el Centro'), findsOneWidget);
+    expect(find.text('Bajada · hacia el Centro'), findsOneWidget);
     expect(find.text('Demorado · hace 45 s'), findsOneWidget);
   });
 }

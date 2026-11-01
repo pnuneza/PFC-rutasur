@@ -49,6 +49,9 @@ class MapaRuta extends StatelessWidget {
     return FlutterMap(
       mapController: controlador,
       options: MapOptions(
+        // Con un controlador externo («Mi ubicación») la cámara inicial debe caer dentro
+        // del corredor desde el principio; si no, flutter_map la rechaza (D-14).
+        initialCenter: limites.center,
         initialCameraFit: CameraFit.bounds(
           bounds: limites,
           padding: const EdgeInsets.fromLTRB(32, 96, 32, 140),
