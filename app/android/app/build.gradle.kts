@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -7,7 +9,7 @@ plugins {
 // Firma propia de RutaSur. Se lee de app/android/key.properties (en la PC) o de las
 // variables de entorno que GitHub Actions arma con sus secretos. Sin ellas, se firma con
 // la clave de depuración, que cambia en cada máquina y obliga a desinstalar para actualizar.
-val propiedadesFirma = java.util.Properties().apply {
+val propiedadesFirma = Properties().apply {
     val archivo = rootProject.file("key.properties")
     if (archivo.exists()) archivo.inputStream().use { load(it) }
 }
