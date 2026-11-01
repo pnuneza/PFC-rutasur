@@ -53,6 +53,10 @@ class ParaderoDeVarianteDTO(BaseModel):
     order: int
     distance_from_start_m: float
     shared_trunk: bool = Field(description="Pertenece al tramo común de ambos ramales")
+    main: bool = Field(
+        default=False,
+        description="Paradero principal (plaza, cruce, terminal): se ve con el mapa alejado",
+    )
 
 
 class VarianteDTO(BaseModel):

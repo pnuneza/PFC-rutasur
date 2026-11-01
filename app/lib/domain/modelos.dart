@@ -69,6 +69,7 @@ class ParaderoDeVariante {
     required this.orden,
     required this.distanciaDesdeInicioM,
     required this.tramoComun,
+    this.principal = false,
   });
 
   factory ParaderoDeVariante.fromJson(Map<String, dynamic> json) => ParaderoDeVariante(
@@ -79,6 +80,8 @@ class ParaderoDeVariante {
         orden: json['order'] as int,
         distanciaDesdeInicioM: (json['distance_from_start_m'] as num).toDouble(),
         tramoComun: json['shared_trunk'] as bool,
+        // Servidores anteriores a la 0.6.1 no lo envían
+        principal: json['main'] as bool? ?? false,
       );
 
   final String codigo;
@@ -88,6 +91,9 @@ class ParaderoDeVariante {
   final int orden;
   final double distanciaDesdeInicioM;
   final bool tramoComun;
+
+  /// Plaza, cruce o terminal: se ve con el mapa alejado (0.6.1).
+  final bool principal;
 }
 
 class Variante {
@@ -151,6 +157,17 @@ class Linea {
 
   /// Horario referencial del servicio (RN-009), por ejemplo «05:00 a 21:00».
   String get horario => '$horaInicio a $horaFin';
+
+  /// La misma línea con solo las variantes de un sentido; con null, todas.
+  Linea soloSentido(Sentido? sentido) => sentido == null
+      ? this
+      : Linea(
+          codigo: codigo,
+          nombre: nombre,
+          horaInicio: horaInicio,
+          horaFin: horaFin,
+          variantes: [for (final v in variantes) if (v.sentido == sentido) v],
+        );
 }
 
 /// Paradero tal como se dibuja en el mapa: uno solo aunque pertenezca a
@@ -163,6 +180,8 @@ class ParaderoEnMapa {
     required this.ubicacion,
     required this.tramoComun,
     required this.ramales,
+    this.sentidos = const {},
+    this.principal = false,
   });
 
   final String codigo;
@@ -171,6 +190,15 @@ class ParaderoEnMapa {
   final LatLng ubicacion;
   final bool tramoComun;
   final Set<Ramal> ramales;
+
+  /// Sentidos de las variantes que paran aquí; vacío si no se conocen (resultado de búsqueda).
+  final Set<Sentido> sentidos;
+
+  /// Se ve con el mapa alejado (0.6.1).
+  final bool principal;
+
+  /// Pertenece al sentido elegido en el mapa (null = ambos).
+  bool enSentido(Sentido? sentido) => sentido == null || sentidos.isEmpty || sentidos.contains(sentido);
 }
 
 /// Une los paraderos de todas las variantes en una lista sin repetidos.
@@ -186,6 +214,8 @@ List<ParaderoEnMapa> paraderosUnicos(Linea linea) {
         ubicacion: p.ubicacion,
         tramoComun: p.tramoComun,
         ramales: {...?previo?.ramales, variante.ramal},
+        sentidos: {...?previo?.sentidos, variante.sentido},
+        principal: p.principal || (previo?.principal ?? false),
       );
     }
   }

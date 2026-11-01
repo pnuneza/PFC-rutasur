@@ -131,9 +131,11 @@ class _PantallaMapaState extends State<PantallaMapa> {
     return Stack(
       children: [
         MapaRuta(
-          linea: linea,
-          paraderos: c.paraderos,
-          unidades: c.unidades,
+          linea: c.lineaVisible ?? linea,
+          lineaCompleta: linea,
+          paraderos: c.paraderosVisibles,
+          unidades: c.unidadesVisibles,
+          siempreVisibles: {...c.codigosFavoritos, if (c.cercano != null) c.cercano!.paradero.codigo},
           atenuarUnidades: c.sinConexion,
           ubicacionUsuario: c.posicionUsuario,
           controlador: _mapa,
@@ -149,6 +151,8 @@ class _PantallaMapaState extends State<PantallaMapa> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _BarraBusqueda(alTocar: _buscar),
+              const SizedBox(height: 8),
+              FiltroSentido(sentido: c.sentido, alElegir: c.elegirSentido),
               const SizedBox(height: 8),
               IndicadorActualizacion(controlador: c),
               if (c.sinConexion) ...[
@@ -347,6 +351,52 @@ class _ErrorDeCarga extends StatelessWidget {
             Text(mensaje, textAlign: TextAlign.center),
             const SizedBox(height: 12),
             FilledButton(onPressed: alReintentar, child: const Text('Reintentar')),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bajada, subida o ambos: qué buses, líneas y paraderos se ven en el mapa (0.6.1).
+///
+/// Del Centro a Characato las dos direcciones van por las mismas calles; elegir una
+/// evita confundir un bus que sube con uno que baja. Se usan las palabras de los
+/// pasajeros de la línea: «bajada» hacia el Centro y «subida» hacia el ramal.
+class FiltroSentido extends StatelessWidget {
+  const FiltroSentido({super.key, required this.sentido, required this.alElegir});
+
+  final Sentido? sentido;
+  final ValueChanged<Sentido?> alElegir;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget opcion(String clave, String texto, String descripcion, Sentido? valor) => Semantics(
+          label: descripcion,
+          excludeSemantics: true,
+          selected: sentido == valor,
+          button: true,
+          child: ChoiceChip(
+            key: Key('sentido-$clave'),
+            label: Text(texto),
+            selected: sentido == valor,
+            showCheckmark: false,
+            onSelected: (_) => alElegir(valor),
+          ),
+        );
+    return Material(
+      elevation: 3,
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(24),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 4,
+          children: [
+            opcion('bajada', 'Bajada', 'Ver solo la bajada, hacia el Centro', Sentido.ida),
+            opcion('subida', 'Subida', 'Ver solo la subida, hacia Mollebaya y Cerrillo', Sentido.vuelta),
+            opcion('ambos', 'Ambos', 'Ver la bajada y la subida', null),
           ],
         ),
       ),

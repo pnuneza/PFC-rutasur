@@ -52,6 +52,29 @@ class ControladorMapa extends ChangeNotifier {
   ParaderoCercano? cercano;
   bool ubicacionConcedida = false;
 
+  /// Sentido que el pasajero eligió ver: bajada, subida o ambos (null). 0.6.1.
+  Sentido? sentido;
+
+  /// La línea solo con las variantes del sentido elegido.
+  Linea? get lineaVisible => linea?.soloSentido(sentido);
+
+  /// Paraderos del sentido elegido.
+  List<ParaderoEnMapa> get paraderosVisibles =>
+      sentido == null ? paraderos : [for (final p in paraderos) if (p.enSentido(sentido)) p];
+
+  /// Unidades que van en el sentido elegido.
+  List<UnidadActiva> get unidadesVisibles =>
+      sentido == null ? unidades : [for (final u in unidades) if (u.sentido == sentido) u];
+
+  /// Cambia el sentido del mapa, lo recuerda y vuelve a proponer el paradero más cercano.
+  Future<void> elegirSentido(Sentido? nuevo) async {
+    sentido = nuevo;
+    final posicion = posicionUsuario;
+    if (posicion != null) cercano = paraderoMasCercano(paraderosVisibles, posicion);
+    _notificar();
+    await _preferencias?.guardarSentido(nuevo);
+  }
+
   /// Descarga la ruta, consulta las unidades y programa la consulta periódica.
   Future<void> iniciar() async {
     await cargarLinea();
@@ -59,6 +82,7 @@ class ControladorMapa extends ChangeNotifier {
     // Se descartan los favoritos de paraderos que ya no están en la ruta
     final guardados = await _preferencias?.favoritos() ?? const <String>[];
     codigosFavoritos = [for (final c in guardados) if (paraderoPorCodigo(c) != null) c];
+    sentido = await _preferencias?.sentidoElegido();
     if (await _ubicacion?.permisoConcedido() ?? false) {
       ubicacionConcedida = true;
       unawaited(actualizarUbicacion());
@@ -104,7 +128,7 @@ class ControladorMapa extends ChangeNotifier {
     final posicion = await _ubicacion?.posicionActual();
     if (posicion != null) {
       posicionUsuario = posicion;
-      cercano = paraderoMasCercano(paraderos, posicion);
+      cercano = paraderoMasCercano(paraderosVisibles, posicion);
       _notificar();
     }
     return posicion;
