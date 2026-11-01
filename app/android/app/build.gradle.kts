@@ -15,10 +15,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "pe.edu.ucsm.rutasur"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         // flutter_secure_storage necesita Android 6.0 (API 23) o superior
         minSdk = maxOf(flutter.minSdkVersion, 23)
         targetSdk = flutter.targetSdkVersion
@@ -28,6 +25,24 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+    }
+
+    // Dos aplicaciones sobre el mismo código (P05 Tabla 32): se instalan una al lado de la
+    // otra y solo la del conductor declara los permisos de ubicación en segundo plano
+    // (src/conductor/AndroidManifest.xml).
+    //   flutter build apk --flavor pasajero  -t lib/entrypoints/main_pasajero.dart
+    //   flutter build apk --flavor conductor -t lib/entrypoints/main_conductor.dart
+    flavorDimensions += "app"
+    productFlavors {
+        create("pasajero") {
+            dimension = "app"
+            resValue("string", "app_name", "RutaSur")
+        }
+        create("conductor") {
+            dimension = "app"
+            applicationIdSuffix = ".conductor"
+            resValue("string", "app_name", "RutaSur Conductor")
+        }
     }
 
     buildTypes {
