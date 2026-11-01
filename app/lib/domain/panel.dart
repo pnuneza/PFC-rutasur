@@ -120,8 +120,8 @@ class EstadoFlota {
 // ---------------------------------------------------------------------------
 // A-03 Rutas y paraderos (RF-015)
 // ---------------------------------------------------------------------------
-class ParaderoDeVariante {
-  const ParaderoDeVariante({
+class ParaderoVarianteAdmin {
+  const ParaderoVarianteAdmin({
     required this.codigo,
     required this.nombre,
     required this.referencia,
@@ -131,7 +131,7 @@ class ParaderoDeVariante {
     required this.tramoComun,
   });
 
-  factory ParaderoDeVariante.fromJson(Map<String, dynamic> j) => ParaderoDeVariante(
+  factory ParaderoVarianteAdmin.fromJson(Map<String, dynamic> j) => ParaderoVarianteAdmin(
         codigo: j['code'] as String,
         nombre: j['name'] as String,
         referencia: j['reference'] as String?,
@@ -173,7 +173,7 @@ class VarianteAdmin {
         ],
         paraderos: [
           for (final p in j['stops'] as List<dynamic>)
-            ParaderoDeVariante.fromJson(p as Map<String, dynamic>),
+            ParaderoVarianteAdmin.fromJson(p as Map<String, dynamic>),
         ],
       );
 
@@ -183,7 +183,7 @@ class VarianteAdmin {
   final String destino;
   final double longitudM;
   final List<LatLng> trazado;
-  final List<ParaderoDeVariante> paraderos;
+  final List<ParaderoVarianteAdmin> paraderos;
 
   /// «Mollebaya → Centro», «Centro → Cerrillo».
   String get nombre =>

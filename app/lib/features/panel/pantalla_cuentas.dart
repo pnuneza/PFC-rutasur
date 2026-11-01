@@ -457,7 +457,7 @@ class _DialogoCuentaConductorState extends State<_DialogoCuentaConductor> {
                 children: [
                   DropdownButtonFormField<UnidadAdmin>(
                     key: const Key('campo-unidad'),
-                    value: _unidad,
+                    initialValue: _unidad,
                     decoration: const InputDecoration(labelText: 'Unidad', border: OutlineInputBorder()),
                     items: [
                       for (final u in widget.unidades)

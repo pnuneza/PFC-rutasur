@@ -188,7 +188,7 @@ class ServicioPanelFalso implements ServicioPanel {
       trazado: trazadoPrueba,
       paraderos: [
         for (final (i, p) in lista.indexed)
-          ParaderoDeVariante(
+          ParaderoVarianteAdmin(
             codigo: p.codigo,
             nombre: p.nombre,
             referencia: p.referencia,

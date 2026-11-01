@@ -116,7 +116,7 @@ class _PantallaRutasState extends State<PantallaRutas> {
     );
   }
 
-  Future<void> _quitar(ParaderoDeVariante p) async {
+  Future<void> _quitar(ParaderoVarianteAdmin p) async {
     final v = _variante!;
     final ok = await confirmar(
       context,
