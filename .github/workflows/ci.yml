@@ -129,10 +129,21 @@ jobs:
         run: flutter pub get
 
       - name: Análisis estático (flutter analyze)
-        run: flutter analyze --no-fatal-infos
+        run: |
+          set -o pipefail
+          flutter analyze --no-fatal-infos 2>&1 | tee analisis.txt
 
       - name: Pruebas unitarias y de widgets
         run: flutter test --reporter json > resultados-flutter.json
+
+      - name: Detalle de los avisos del análisis
+        if: failure()
+        # «  error • mensaje • lib/a.dart:10:5 • codigo» → anotación en el archivo
+        run: |
+          awk -F ' • ' 'NF >= 4 {
+            sev = $1; gsub(/^ +/, "", sev); split($3, a, ":");
+            printf "::%s file=app/%s,line=%s,col=%s::%s (%s)\n", (sev == "error" ? "error" : "warning"), a[1], a[2], a[3], $2, $4
+          }' analisis.txt 2>/dev/null || true
 
       - name: Detalle de las pruebas fallidas
         if: failure()

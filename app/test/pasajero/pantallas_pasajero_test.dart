@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:rutasur/core/tema.dart';
-import 'package:rutasur/domain/modelos.dart';
 import 'package:rutasur/features/pasajero/app_pasajero.dart';
 import 'package:rutasur/features/pasajero/controlador_mapa.dart';
 import 'package:rutasur/features/pasajero/hoja_llegadas.dart';
