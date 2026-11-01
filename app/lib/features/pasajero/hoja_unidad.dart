@@ -35,7 +35,7 @@ class HojaUnidad extends StatelessWidget {
           EtiquetaDestino(ramal: u.ramal, destino: u.destino),
           const SizedBox(height: 12),
           _Dato(nombre: 'Ramal', valor: u.ramal.nombre),
-          _Dato(nombre: 'Sentido', valor: u.sentido.descripcion),
+          _Dato(nombre: 'Sentido', valor: textoSentido(u.ramal, u.sentido)),
           _Dato(nombre: 'Última posición', valor: textoAntiguedad(u.antiguedadS)),
           const SizedBox(height: 8),
           EtiquetaEstado.frescura(u.frescura, textoFrescura(u.frescura, u.antiguedadS)),

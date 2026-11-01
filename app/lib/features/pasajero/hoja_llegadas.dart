@@ -16,6 +16,8 @@ Future<void> mostrarLlegadas(
   required RepositorioRutaSur repositorio,
   required ParaderoEnMapa paradero,
   required String horario,
+  bool esFavorito = false,
+  Future<bool> Function()? alAlternarFavorito,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -23,7 +25,13 @@ Future<void> mostrarLlegadas(
     showDragHandle: true,
     builder: (_) => FractionallySizedBox(
       heightFactor: 0.6,
-      child: HojaLlegadas(repositorio: repositorio, paradero: paradero, horario: horario),
+      child: HojaLlegadas(
+        repositorio: repositorio,
+        paradero: paradero,
+        horario: horario,
+        esFavorito: esFavorito,
+        alAlternarFavorito: alAlternarFavorito,
+      ),
     ),
   );
 }
@@ -34,11 +42,17 @@ class HojaLlegadas extends StatefulWidget {
     required this.repositorio,
     required this.paradero,
     required this.horario,
+    this.esFavorito = false,
+    this.alAlternarFavorito,
   });
 
   final RepositorioRutaSur repositorio;
   final ParaderoEnMapa paradero;
   final String horario;
+  final bool esFavorito;
+
+  /// Agrega o quita el paradero de favoritos (RF-007); false si ya hay 10.
+  final Future<bool> Function()? alAlternarFavorito;
 
   @override
   State<HojaLlegadas> createState() => _HojaLlegadasState();
@@ -47,6 +61,19 @@ class HojaLlegadas extends StatefulWidget {
 class _HojaLlegadasState extends State<HojaLlegadas> {
   late final ControladorLlegadas _controlador =
       ControladorLlegadas(widget.repositorio, widget.paradero.codigo);
+  late bool _favorito = widget.esFavorito;
+
+  Future<void> _alternarFavorito() async {
+    final ok = await widget.alAlternarFavorito!();
+    if (!mounted) return;
+    if (ok) {
+      setState(() => _favorito = !_favorito);
+    } else {
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+        const SnackBar(content: Text('Puedes guardar hasta 10 favoritos. Quita uno para agregar otro.')),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -72,7 +99,21 @@ class _HojaLlegadasState extends State<HojaLlegadas> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(p.nombre, style: Theme.of(context).textTheme.titleLarge),
+              Row(
+                children: [
+                  Expanded(child: Text(p.nombre, style: Theme.of(context).textTheme.titleLarge)),
+                  if (widget.alAlternarFavorito != null)
+                    TextButton.icon(
+                      key: const Key('favorito'),
+                      onPressed: _alternarFavorito,
+                      icon: Icon(
+                        _favorito ? Icons.star : Icons.star_border,
+                        color: ColoresRutaSur.demoradoTexto,
+                      ),
+                      label: Text(_favorito ? 'Favorito' : 'Guardar'),
+                    ),
+                ],
+              ),
               if (p.referencia != null)
                 Text(p.referencia!, style: const TextStyle(color: ColoresRutaSur.textoSecundario)),
               const SizedBox(height: 4),

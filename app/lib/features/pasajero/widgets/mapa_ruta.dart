@@ -19,6 +19,9 @@ class MapaRuta extends StatelessWidget {
     required this.atenuarUnidades,
     required this.alTocarParadero,
     required this.alTocarUnidad,
+    this.ubicacionUsuario,
+    this.controlador,
+    this.mostrarTeselas = true,
   });
 
   final Linea linea;
@@ -28,6 +31,15 @@ class MapaRuta extends StatelessWidget {
   final ValueChanged<ParaderoEnMapa> alTocarParadero;
   final ValueChanged<UnidadActiva> alTocarUnidad;
 
+  /// Punto azul del pasajero (RF-006); solo se dibuja, nunca se envía.
+  final LatLng? ubicacionUsuario;
+
+  /// Para centrar el mapa en el pasajero con «Mi ubicación».
+  final MapController? controlador;
+
+  /// Fondo de OpenStreetMap; las pruebas lo omiten porque no tienen internet.
+  final bool mostrarTeselas;
+
   @override
   Widget build(BuildContext context) {
     final puntos = [for (final v in linea.variantes) ...v.trazado];
@@ -35,6 +47,7 @@ class MapaRuta extends StatelessWidget {
     final comun = tramoComun(linea);
 
     return FlutterMap(
+      mapController: controlador,
       options: MapOptions(
         initialCameraFit: CameraFit.bounds(
           bounds: limites,
@@ -49,10 +62,11 @@ class MapaRuta extends StatelessWidget {
         ),
       ),
       children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'pe.edu.ucsm.rutasur',
-        ),
+        if (mostrarTeselas)
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'pe.edu.ucsm.rutasur',
+          ),
         PolylineLayer(
           polylines: [
             // Cada variante con el color de su ramal...
@@ -81,6 +95,27 @@ class MapaRuta extends StatelessWidget {
               ),
           ],
         ),
+        if (ubicacionUsuario != null)
+          MarkerLayer(
+            markers: [
+              Marker(
+                point: ubicacionUsuario!,
+                width: 24,
+                height: 24,
+                child: Semantics(
+                  label: 'Tu ubicación',
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1A73E8),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 3),
+                      boxShadow: const [BoxShadow(blurRadius: 4, color: Colors.black26)],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         MarkerLayer(
           markers: [
             for (final unidad in unidades)
