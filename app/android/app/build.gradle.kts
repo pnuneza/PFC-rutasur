@@ -4,6 +4,21 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Firma propia de RutaSur. Se lee de app/android/key.properties (en la PC) o de las
+// variables de entorno que GitHub Actions arma con sus secretos. Sin ellas, se firma con
+// la clave de depuración, que cambia en cada máquina y obliga a desinstalar para actualizar.
+val propiedadesFirma = java.util.Properties().apply {
+    val archivo = rootProject.file("key.properties")
+    if (archivo.exists()) archivo.inputStream().use { load(it) }
+}
+
+fun datoFirma(propiedad: String, variable: String): String? =
+    propiedadesFirma.getProperty(propiedad) ?: System.getenv(variable)?.takeIf { it.isNotBlank() }
+
+val almacenFirma = datoFirma("storeFile", "RUTASUR_KEYSTORE")
+val claveFirma = datoFirma("storePassword", "RUTASUR_KEYSTORE_PASSWORD")
+val hayFirmaPropia = almacenFirma != null && claveFirma != null
+
 android {
     namespace = "pe.edu.ucsm.rutasur"
     compileSdk = flutter.compileSdkVersion
@@ -45,11 +60,21 @@ android {
         }
     }
 
+    signingConfigs {
+        if (hayFirmaPropia) {
+            create("rutasur") {
+                storeFile = file(almacenFirma!!)
+                storePassword = claveFirma
+                keyAlias = datoFirma("keyAlias", "RUTASUR_KEY_ALIAS") ?: "rutasur"
+                // En un almacén PKCS12 (el de keytool) la clave usa la misma contraseña
+                keyPassword = datoFirma("keyPassword", "RUTASUR_KEY_PASSWORD") ?: claveFirma
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (hayFirmaPropia) "rutasur" else "debug")
         }
     }
 }
