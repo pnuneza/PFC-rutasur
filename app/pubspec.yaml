@@ -1,7 +1,7 @@
 name: rutasur
 description: "RutaSur v1.0 — seguimiento en tiempo real de los buses de la línea LB (Cono Sur de Arequipa)."
 publish_to: "none"
-version: 0.6.0+5
+version: 0.6.1+6
 
 environment:
   sdk: ^3.6.0
