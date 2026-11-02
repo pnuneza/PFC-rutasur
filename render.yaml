@@ -34,6 +34,31 @@ services:
       # RN-012 con el límite de 1 GB de Neon gratuito: 14 días de historial
       - key: RETENCION_DIAS
         value: "14"
-      # El panel web (Módulo 6) agregará aquí su dominio
+      # Solo el panel web puede llamar a la API desde un navegador (OWASP A05).
+      # Si Render le da al panel otra dirección, se corrige aquí.
       - key: CORS_ORIGENES
-        value: "[]"
+        value: '["https://rutasur-panel.onrender.com"]'
+
+  # Panel administrativo (Módulo 6): Flutter Web publicado como sitio estático gratuito
+  - type: web
+    name: rutasur-panel
+    runtime: static
+    rootDir: app
+    branch: main
+    autoDeployTrigger: checksPass
+    buildCommand: bash tool/construir_panel_web.sh
+    staticPublishPath: build/web
+    envVars:
+      - key: API_URL
+        value: https://rutasur-api.onrender.com
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      # Envía solo el dominio: lo exige la política de uso de los mapas de OpenStreetMap
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin

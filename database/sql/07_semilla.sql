@@ -7,7 +7,8 @@
 -- Para desarrollo, use database/demo/datos_demo.sql.
 -- ==========================================================
 
--- Horario referencial de ejemplo (P06): se ajustará al que acuerde la empresa.
+-- Horario referencial según la operación real (chat del grupo, jul–oct 2026): no hay
+-- combis de noche. Se puede ajustar desde el panel (A-03).
 INSERT INTO linea (codigo, nombre, hora_inicio, hora_fin)
-VALUES ('LB', 'Línea LB — Characato', '05:00', '21:00')
+VALUES ('LB', 'Línea LB — Characato', '05:00', '19:30')
 ON CONFLICT (codigo) DO NOTHING;

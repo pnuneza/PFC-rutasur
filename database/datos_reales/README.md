@@ -49,6 +49,8 @@ referencia.
 | `codigos_paraderos.json` | Código público (`stp_NNN`) de cada paradero. No cambia al volver a exportar |
 | `paraderos_a_sql.py` | Genera `ruta_lb.sql` y avisa si hay nombres repetidos en un mismo sentido |
 | `ruta_lb.sql` | **Generado.** Se aplica a la base |
+| `propuestas_chat.py`, `renombrar_repetidos.py` | Ubican los hitos que nombra el chat del grupo y les dan nombre a los paraderos repetidos con el lugar más cercano de OpenStreetMap |
+| `linea_base_chat.py` | Cifras de operación del chat (salidas por día, intervalos, tiempos programados). Resultados en `docs/calidad/linea-base-operacion.md`. El chat no se sube |
 
 ## Aplicar a una base que ya existe (PowerShell, en la raíz del proyecto, con Docker levantado)
 

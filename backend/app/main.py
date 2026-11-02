@@ -15,7 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import RequestResponseEndpoint
 
 from app import __version__
-from app.api.v1 import emision, publica
+from app.api.v1 import admin, emision, publica
 from app.core.config import obtener_configuracion
 from app.core.errores import registrar_manejadores
 from app.db.conexion import obtener_motor
@@ -112,6 +112,7 @@ def crear_app() -> FastAPI:
     registrar_manejadores(app)
     app.include_router(publica.router)
     app.include_router(emision.router)
+    app.include_router(admin.router)
     return app
 
 

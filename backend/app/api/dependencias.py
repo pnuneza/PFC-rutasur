@@ -17,11 +17,13 @@ from app.db.conexion import sesion_bd
 from app.domain.excepciones import AccesoDenegado, TokenInvalido
 from app.domain.modelos import Identidad, Rol
 from app.domain.umbrales import UMBRALES_POR_DEFECTO
+from app.repositories.sql_administracion import RepositorioAdministracionSQL
 from app.repositories.sql_cuentas import RepositorioCuentasSQL
 from app.repositories.sql_emision import RepositorioEmisionSQL
 from app.repositories.sql_flota import RepositorioFlotaSQL
 from app.repositories.sql_rutas import RepositorioRutasSQL
 from app.services.estimador_eta import EstimadorDirecto
+from app.services.servicio_administracion import ServicioAdministracion
 from app.services.servicio_autenticacion import ServicioAutenticacion
 from app.services.servicio_emision import ServicioEmision
 from app.services.servicio_flota import ServicioFlota
@@ -59,6 +61,10 @@ def servicio_autenticacion(sesion: Session = Depends(sesion_bd)) -> ServicioAute
 
 def servicio_emision(sesion: Session = Depends(sesion_bd)) -> ServicioEmision:
     return ServicioEmision(RepositorioEmisionSQL(sesion), ValidadorPosiciones())
+
+
+def servicio_administracion(sesion: Session = Depends(sesion_bd)) -> ServicioAdministracion:
+    return ServicioAdministracion(RepositorioAdministracionSQL(sesion))
 
 
 # ----------------------------------------------------------------------
