@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rutasur/domain/panel.dart';
 import 'package:rutasur/domain/repositorio.dart';
 import 'package:rutasur/features/panel/app_panel.dart';
+import 'package:rutasur/features/panel/pantalla_eventos.dart';
 
 import 'fakes_panel.dart';
 
@@ -295,6 +296,16 @@ void main() {
   });
 
   group('A-05 Registro de eventos (RF-020)', () {
+    test('el detalle se lee en lenguaje claro', () {
+      expect(
+        textoDetalle({'eventos': 0, 'sesiones': 0, 'posiciones': 0, 'dias_retencion': 14}),
+        'eventos 0 · sesiones 0 · posiciones 0 · días de retención 14',
+      );
+      expect(textoDetalle({'variante': 'MOLLEBAYA-IDA'}), 'variante MOLLEBAYA-IDA');
+      expect(textoDetalle({'datos': {'a': 1}}), 'datos {"a":1}');
+      expect(textoDetalle(null), '—');
+    });
+
     testWidgets('muestra los eventos, el total, la retención y pagina', (tester) async {
       final s = await abrirPanel(tester, usuario: 'moderador.demo');
       await ir(tester, 'eventos');
