@@ -66,3 +66,19 @@ def test_verificacion_detecta_que_falta_hsts_y_https(cliente):
     resultado = verificar(_obtener_con(cliente), "http://localhost:8000")
     fallas = {nombre for nombre, ok, _ in resultado.verificaciones if not ok}
     assert fallas == {"Conexión HTTPS"}
+
+
+def test_evaluar_eta_lee_los_viajes_de_la_base(motor):
+    """La sesión demo de la unidad 07 se carga con sus posiciones proyectadas al trazado."""
+    from datetime import date, timedelta
+
+    from app.herramientas.evaluar_eta import cargar_viajes, reproducir
+
+    hoy = date.today()
+    viajes = cargar_viajes(motor, hoy - timedelta(days=1), hoy + timedelta(days=1), "07")
+    assert viajes, "la sesión demo de la unidad 07 debería estar en el rango"
+    v = viajes[0]
+    assert v.paraderos and v.lecturas
+    recorridos = [x.recorrido_m for x in v.lecturas]
+    assert recorridos == sorted(recorridos)  # avanza por el trazado
+    reproducir(v)  # no falla con datos reales
