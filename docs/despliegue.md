@@ -72,9 +72,9 @@ tardar un minuto si el servicio estaba apagado.
 
 ## Paso 4 — Cuentas en producción
 
-La base de la nube no tiene datos demo: las unidades y sus cuentas se crean con la
-herramienta de cuentas. Mientras no exista el panel (Módulo 6), es la única forma.
-En la carpeta `backend`, con el entorno virtual activo:
+La base de la nube no tiene datos demo. La primera cuenta del panel se crea con la
+herramienta de cuentas; después, las unidades y las demás cuentas se manejan desde el panel
+administrativo (`docs/panel.md`). En la carpeta `backend`, con el entorno virtual activo:
 
 ```powershell
 $env:DATABASE_URL = "postgresql://rutasur_app:(contraseña)@ep-….neon.tech/neondb?sslmode=require"
@@ -105,6 +105,7 @@ los usuarios deben volver a ingresar.
 
 Después de cambiar paraderos o trazados (`database/datos_reales/README.md`), vuelva a
 ejecutar el comando del paso 1.4. Si el esquema ya existe, solo actualiza la ruta.
+**Ojo:** reemplaza los paraderos editados en el panel (ver `docs/panel.md`).
 
 ## Seguridad
 
