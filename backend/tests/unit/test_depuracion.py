@@ -21,12 +21,34 @@ def test_un_fallo_se_registra_y_la_tarea_sigue(monkeypatch, caplog):
             raise asyncio.CancelledError  # termina la prueba
 
     monkeypatch.setattr(depuracion, "depurar", depurar_falso)
+    monkeypatch.setattr(depuracion, "segundos_para_la_siguiente", lambda motor: 0.0)
     monkeypatch.setattr(depuracion, "INTERVALO_S", 0)
     with pytest.raises(asyncio.CancelledError):
         asyncio.run(depuracion.depurar_periodicamente(object(), 14, espera_inicial_s=0))
 
     assert llamadas == [14, 14]
     assert "Falló la depuración automática" in caplog.text
+
+
+def test_si_ya_corrio_hace_poco_espera_lo_que_falta(monkeypatch):
+    """Render reinicia el servicio muchas veces al día: no se depura en cada arranque (D-18)."""
+    llamadas, esperas = [], []
+
+    async def dormir(segundos):
+        esperas.append(segundos)
+        if len(esperas) == 3:
+            raise asyncio.CancelledError
+
+    faltan = iter([3600.0, 0.0])
+    monkeypatch.setattr(depuracion, "segundos_para_la_siguiente", lambda motor: next(faltan))
+    monkeypatch.setattr(depuracion, "depurar", lambda motor, dias: llamadas.append(dias))
+    monkeypatch.setattr(depuracion.asyncio, "sleep", dormir)
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(depuracion.depurar_periodicamente(object(), 14, espera_inicial_s=30))
+
+    # Arranque (30 s), espera lo que faltaba (1 h), depura y espera 24 h
+    assert esperas == [30, 3600.0, depuracion.INTERVALO_S]
+    assert llamadas == [14]
 
 
 def test_el_servicio_arranca_la_depuracion_solo_si_corresponde(monkeypatch):

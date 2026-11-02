@@ -212,10 +212,13 @@ class _PantallaEventosState extends State<PantallaEventos> {
                                 DataCell(Text(e.codigoHttp?.toString() ?? '—')),
                                 DataCell(ConstrainedBox(
                                   constraints: const BoxConstraints(maxWidth: 420),
-                                  child: Text(
-                                    e.detalle == null ? '—' : jsonEncode(e.detalle),
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
+                                  child: Tooltip(
+                                    message: e.detalle == null ? '' : jsonEncode(e.detalle),
+                                    child: Text(
+                                      textoDetalle(e.detalle),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 )),
                               ]),
@@ -256,4 +259,21 @@ class _PantallaEventosState extends State<PantallaEventos> {
       ],
     );
   }
+}
+
+/// Detalle de un evento en lenguaje claro: «eventos 0 · sesiones 0 · días de retención 14».
+/// El JSON completo queda en la ayuda emergente.
+String textoDetalle(Map<String, dynamic>? detalle) {
+  if (detalle == null || detalle.isEmpty) return '—';
+  const nombres = {
+    'dias_retencion': 'días de retención',
+    'variante': 'variante',
+    'accion': 'acción',
+    'motivo': 'motivo',
+  };
+  return [
+    for (final MapEntry(:key, :value) in detalle.entries)
+      '${nombres[key] ?? key.replaceAll('_', ' ')} '
+          '${value is Map || value is List ? jsonEncode(value) : value}',
+  ].join(' · ');
 }
