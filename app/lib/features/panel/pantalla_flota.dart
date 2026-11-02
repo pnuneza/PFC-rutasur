@@ -16,7 +16,9 @@ import '../../domain/panel.dart';
 import 'comun.dart';
 
 /// Centro aproximado de la línea LB, para abrir el mapa antes de tener unidades.
-const _centroLinea = LatLng(-16.445, -71.505);
+/// Encuadre de la línea LB, de Santa Ana (Mollebaya) al Centro: el mapa se abre mostrando
+/// la ruta aunque no haya unidades transmitiendo.
+final _encuadreLinea = LatLngBounds(const LatLng(-16.4885, -71.5340), const LatLng(-16.3985, -71.4570));
 
 class PantallaFlota extends StatefulWidget {
   const PantallaFlota({super.key, required this.contexto, this.mostrarTeselas = true, DateTime Function()? reloj})
@@ -237,7 +239,11 @@ class _PantallaFlotaState extends State<PantallaFlota> {
       borderRadius: BorderRadius.circular(12),
       child: FlutterMap(
         mapController: _mapa,
-        options: const MapOptions(initialCenter: _centroLinea, initialZoom: 12.5, minZoom: 10, maxZoom: 18),
+        options: MapOptions(
+          initialCameraFit: CameraFit.bounds(bounds: _encuadreLinea, padding: const EdgeInsets.all(16)),
+          minZoom: 10,
+          maxZoom: 18,
+        ),
         children: [
           if (widget.mostrarTeselas) ...[
             TileLayer(

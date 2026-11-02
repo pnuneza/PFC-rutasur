@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app import main
 from app.core.config import Configuracion
 from app.db.conexion import sesion_bd
-from app.db.depuracion import depurar
+from app.db.depuracion import INTERVALO_S, depurar, segundos_para_la_siguiente
 from app.herramientas.verificar_despliegue import Respuesta, verificar
 
 pytestmark = pytest.mark.integracion
@@ -23,6 +23,12 @@ def test_depuracion_llama_a_la_funcion_de_la_base(motor):
         "sesiones_eliminadas": 0,
         "eventos_eliminados": 0,
     }
+
+
+def test_despues_de_depurar_la_siguiente_es_en_24_horas(motor):
+    depurar(motor, 3650)
+    falta = segundos_para_la_siguiente(motor)
+    assert INTERVALO_S - 60 < falta <= INTERVALO_S
 
 
 @pytest.fixture
