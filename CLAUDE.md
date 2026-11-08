@@ -111,6 +111,7 @@ Investigación II todavía lo menciona y está por confirmar con Pierre.
 - **RN-009:** horario referencial de la línea, de **05:00 a 19:30**. Viene del chat del grupo; de noche no hay servicio.
 - **RN-011:** no se guardan datos personales (nombre, DNI ni teléfono). El pasajero no tiene cuenta y su posición no sale del teléfono.
 - **RN-012:** posiciones, sesiones y eventos se borran a los **14 días** en producción. La depuración corre una vez cada 24 h (D-18).
+- **Sesiones abandonadas:** una sesión sin posiciones durante más de 2 h se cierra sola (CERRADA_AUTOMATICAMENTE, D-19).
 
 ## 7. Cómo se trabaja
 
@@ -165,5 +166,4 @@ se aplica con `aplicar_en_nube.sh`. **Ojo:** desde que existe el panel, reaplica
 
 ## 9. Pendientes conocidos
 
-- **Sesiones abiertas:** no se cierran solas. Una sesión de `unidad07` del 04/11 quedó ACTIVA. Conviene cerrar automáticamente las que lleven horas sin posiciones.
 - **Fase 3 del informe:** el Capítulo 3 (Fase 3) y la sustentación siguen pendientes; la sustentación es a mediados o fines de noviembre de 2026.

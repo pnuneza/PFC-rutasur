@@ -57,12 +57,19 @@ def test_el_servicio_arranca_la_depuracion_solo_si_corresponde(monkeypatch):
     async def tarea_falsa(motor, dias):
         arrancadas.append(dias)
 
+    async def cierre_falso(motor):
+        arrancadas.append("cierre")
+
     monkeypatch.setattr(main, "depurar_periodicamente", tarea_falsa)
+    monkeypatch.setattr(main, "cerrar_periodicamente", cierre_falso)
     monkeypatch.setattr(main, "obtener_motor", lambda: object())
 
     for config, esperado in [
         (Configuracion(entorno="desarrollo"), []),
-        (Configuracion(entorno="produccion", jwt_secreto="p" * 40, retencion_dias=14), [14]),
+        (
+            Configuracion(entorno="produccion", jwt_secreto="p" * 40, retencion_dias=14),
+            [14, "cierre"],
+        ),
     ]:
         arrancadas.clear()
         monkeypatch.setattr(main, "obtener_configuracion", lambda c=config: c)
@@ -76,3 +83,22 @@ def test_verificador_rechaza_esquemas_que_no_son_http():
 
     with pytest.raises(ValueError, match="http"):
         obtener_por_red("file:///etc/passwd")
+
+
+def test_el_cierre_de_sesiones_sigue_aunque_falle(monkeypatch, caplog):
+    from app.db import sesiones_abandonadas as sa
+
+    llamadas = []
+
+    def cerrar_falso(motor):
+        llamadas.append(1)
+        if len(llamadas) == 1:
+            raise RuntimeError("Neon suspendido")
+        raise asyncio.CancelledError  # termina la prueba
+
+    monkeypatch.setattr(sa, "cerrar_abandonadas", cerrar_falso)
+    monkeypatch.setattr(sa, "INTERVALO_S", 0)
+    with pytest.raises(asyncio.CancelledError):
+        asyncio.run(sa.cerrar_periodicamente(object(), espera_inicial_s=0))
+    assert len(llamadas) == 2
+    assert "Falló el cierre de sesiones abandonadas" in caplog.text
