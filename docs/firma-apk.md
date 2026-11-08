@@ -73,7 +73,7 @@ instala encima.
 Crea `app/android/key.properties` (no se sube al repositorio):
 
 ```properties
-storeFile=C:/Users/NatsukiKenn/claves-rutasur/rutasur.jks
+storeFile=C:/Users/(tu-usuario)/claves-rutasur/rutasur.jks
 storePassword=la-contraseña
 ```
 

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Naranja de la app del conductor: se distingue de la del pasajero en el teléfono -->
+    <color name="ic_launcher_background">#B4410B</color>
+</resources>

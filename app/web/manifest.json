@@ -1,11 +1,11 @@
 {
-    "name": "rutasur",
-    "short_name": "rutasur",
+    "name": "RutaSur · Panel",
+    "short_name": "RutaSur",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0F5257",
+    "theme_color": "#0F5257",
+    "description": "Panel de administración de RutaSur: flota en tiempo real, rutas y paraderos, unidades, cuentas y eventos de la línea LB.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
