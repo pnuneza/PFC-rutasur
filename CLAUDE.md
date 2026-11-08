@@ -1,6 +1,6 @@
 # CLAUDE.md — guía para trabajar en RutaSur
 
-Léelo completo antes de tocar el repositorio. Resume qué es el proyecto, cómo está
+Léelo completo antes de tocar el repositorio. **El repositorio es público:** aquí no va nada que no pueda leer cualquiera (ni contraseñas, ni cadenas de conexión, ni datos personales); lo privado vive en el Proyecto de Claude. Resume qué es el proyecto, cómo está
 armado, cómo se trabaja y qué reglas no se rompen. Actualizado al 08/11/2026 (v0.7.1).
 
 ## 1. Qué es
@@ -49,7 +49,7 @@ El protocolo está en Claude Docs: «RutaSur — Protocolo del piloto (Módulo 7
 |---|---|
 | API | https://rutasur-api.onrender.com (`/docs`, `/api/v1/health`). Render, plan gratuito, se apaga a los 15 min sin uso |
 | Panel | https://rutasur-panel.onrender.com (sitio estático de Render) |
-| Base de datos | Neon, proyecto `royal-grass-98983534`, base `neondb`, PostgreSQL 16 + PostGIS 3.3, AWS us-east-1 |
+| Base de datos | Neon (PostgreSQL 16 + PostGIS 3.3, AWS us-east-1). El identificador del proyecto está en la memoria privada del Proyecto de Claude, no aquí |
 | Despliegue | `render.yaml` (Blueprint `rutasur`); rama `main`, solo si la CI pasó (`autoDeployTrigger: checksPass`) |
 | APK | Workflow `apk.yml`, artefacto `rutasur-apk`, firmado con la clave propia de Pierre (CN=Pierre Nunez) |
 
@@ -142,7 +142,7 @@ python -m app.herramientas.simular_unidad --api https://rutasur-api.onrender.com
 python -m app.herramientas.evaluar_eta --desde 2026-11-09 --hasta 2026-11-20 --unidad 07 --csv contraste.csv
 ```
 
-En producción (Neon) Claude puede **leer** con el MCP de Neon (`run_sql`, `role_name: rutasur_app`).
+En producción (Neon) Claude puede **leer** con el MCP de Neon (`run_sql`, `role_name: rutasur_app`; el id del proyecto está en el doc privado `claude/guia-tecnica-rutasur.md`).
 Los **cambios** en la base de producción los ejecuta Pierre desde su PC:
 
 ```powershell
