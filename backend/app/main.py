@@ -20,6 +20,7 @@ from app.core.config import obtener_configuracion
 from app.core.errores import registrar_manejadores
 from app.db.conexion import obtener_motor
 from app.db.depuracion import depurar_periodicamente
+from app.db.sesiones_abandonadas import cerrar_periodicamente
 
 DESCRIPCION = """
 API de **RutaSur v1.0**: seguimiento en tiempo real de los buses de la línea LB
@@ -60,14 +61,18 @@ def _configurar_registro() -> None:
 
 @contextlib.asynccontextmanager
 async def ciclo_de_vida(app: FastAPI) -> AsyncIterator[None]:
-    """Arranque y cierre del servicio: tareas en segundo plano (RN-012)."""
+    """Arranque y cierre del servicio: tareas en segundo plano (RN-012 y sesiones abandonadas)."""
     _configurar_registro()
     config = obtener_configuracion()
-    tarea = None
+    tareas = []
     if config.depurar_automaticamente:
-        tarea = asyncio.create_task(depurar_periodicamente(obtener_motor(), config.retencion_dias))
+        motor = obtener_motor()
+        tareas = [
+            asyncio.create_task(depurar_periodicamente(motor, config.retencion_dias)),
+            asyncio.create_task(cerrar_periodicamente(motor)),
+        ]
     yield
-    if tarea is not None:
+    for tarea in tareas:
         tarea.cancel()
         with contextlib.suppress(asyncio.CancelledError):
             await tarea

@@ -1,7 +1,7 @@
 # CLAUDE.md — guía para trabajar en RutaSur
 
 Léelo completo antes de tocar el repositorio. **El repositorio es público:** aquí no va nada que no pueda leer cualquiera (ni contraseñas, ni cadenas de conexión, ni datos personales); lo privado vive en el Proyecto de Claude. Resume qué es el proyecto, cómo está
-armado, cómo se trabaja y qué reglas no se rompen. Actualizado al 08/11/2026 (v0.7.1).
+armado, cómo se trabaja y qué reglas no se rompen. Actualizado al 08/11/2026 (v0.7.2).
 
 ## 1. Qué es
 
@@ -111,6 +111,7 @@ Investigación II todavía lo menciona y está por confirmar con Pierre.
 - **RN-009:** horario referencial de la línea, de **05:00 a 19:30**. Viene del chat del grupo; de noche no hay servicio.
 - **RN-011:** no se guardan datos personales (nombre, DNI ni teléfono). El pasajero no tiene cuenta y su posición no sale del teléfono.
 - **RN-012:** posiciones, sesiones y eventos se borran a los **14 días** en producción. La depuración corre una vez cada 24 h (D-18).
+- **Sesiones abandonadas:** una sesión sin posiciones durante más de 2 h se cierra sola (CERRADA_AUTOMATICAMENTE, D-19).
 
 ## 7. Cómo se trabaja
 
@@ -118,7 +119,7 @@ Investigación II todavía lo menciona y está por confirmar con Pierre.
 - **Commits** con Conventional Commits, en español.
 - **En la nube de Claude:** se puede hacer push, crear PR y fusionar por la API REST: `gh api repos/pnuneza/PFC-rutasur/pulls`, luego `PUT pulls/N/merge` con `merge_method=merge`. GraphQL, tags, releases y logs de Actions están bloqueados.
 - **Fallas de la CI:** se leen como anotaciones, con `gh api .../check-runs/<id>/annotations`. Los scripts de `.github/scripts` publican los errores de Flutter y de Gradle.
-- **Los tags los crea Pierre en su PC.** Hay que darle los comandos con el SHA exacto: `git tag -a vX.Y.Z <sha> -m "…"` y luego `git push origin vX.Y.Z`. Existen de v0.2.0 a v0.7.1.
+- **Los tags los crea Pierre en su PC.** Hay que darle los comandos con el SHA exacto: `git tag -a vX.Y.Z <sha> -m "…"` y luego `git push origin vX.Y.Z`. Existen de v0.2.0 a v0.7.1 (falta v0.7.2).
 - **Al empezar una rama nueva en la nube:** configurar `git config --add remote.origin.fetch "+refs/heads/RAMA:refs/remotes/origin/RAMA"` y luego `git branch -u origin/RAMA`.
 - **Versiones:** se suben juntas en `app/pubspec.yaml`, `backend/pyproject.toml` y `backend/app/__init__.py`.
 - **Defectos:** cada uno se registra en `docs/calidad/registro-defectos.md` (D-NN) con su causa, su corrección y la prueba que lo cubre.
@@ -165,5 +166,4 @@ se aplica con `aplicar_en_nube.sh`. **Ojo:** desde que existe el panel, reaplica
 
 ## 9. Pendientes conocidos
 
-- **Sesiones abiertas:** no se cierran solas. Una sesión de `unidad07` del 04/11 quedó ACTIVA. Conviene cerrar automáticamente las que lleven horas sin posiciones.
 - **Fase 3 del informe:** el Capítulo 3 (Fase 3) y la sustentación siguen pendientes; la sustentación es a mediados o fines de noviembre de 2026.
