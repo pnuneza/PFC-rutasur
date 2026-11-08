@@ -1,6 +1,8 @@
 # RutaSur v1.0
 
-Aplicación de seguimiento en tiempo real de los buses de las rutas **LB Mollebaya** (131 paraderos) y **LB Cerrillos** (125 paraderos) del Cono Sur de Arequipa (Characato – Mollebaya – centro de Arequipa).
+Aplicación de seguimiento en tiempo real de las combis de la **línea LB** (ramales **Mollebaya** y **Cerrillo**) del Cono Sur de Arequipa: Santa Ana – Characato – centro de Arequipa. 4 variantes y 92 paraderos reales.
+
+**En producción (v0.7.1):** API https://rutasur-api.onrender.com · panel https://rutasur-panel.onrender.com. Guía completa del proyecto, la arquitectura y la forma de trabajo: [`CLAUDE.md`](CLAUDE.md).
 
 Proyecto de Fin de Carrera — Escuela Profesional de Ingeniería de Sistemas, Universidad Católica de Santa María (UCSM).
 
@@ -12,16 +14,17 @@ Los pasajeros de estas rutas no tienen forma de saber dónde están los buses ni
 
 - **App Conductor:** el dispositivo de cada unidad envía su ubicación GPS en tiempo real. Es la única fuente de posición, por lo que no existen "buses fantasma".
 - **App Pasajero:** muestra en el mapa los paraderos y los buses activos de cada variante, el destino de cada unidad y el tiempo estimado de llegada (ETA) al paradero elegido. No requiere registro.
-- Ambas apps se generan desde un solo código base mediante *flavors* de Flutter.
+- **Panel web:** flota en tiempo real, rutas y paraderos, unidades y cuentas, y registro de eventos.
+- Las tres se generan desde un solo código base de Flutter (*flavors* para Android y Flutter Web para el panel).
 
 ## Estructura del repositorio
 
 ```
 rutasur/
-├── app/        # Flutter (flavors: pasajero, conductor)
-├── backend/    # API REST + WebSocket (FastAPI)
-├── database/   # Scripts SQL: esquema, índices, roles, datos semilla
-└── docs/       # Diagramas, evidencias e informes
+├── app/        # Flutter: pasajero y conductor (Android) y panel (web)
+├── backend/    # API REST (FastAPI) y herramientas (simulador, cuentas, evaluar_eta)
+├── database/   # SQL: esquema, migraciones, ruta real y datos demo
+└── docs/       # Despliegue, panel, firma del APK y calidad
 ```
 
 ## Stack
@@ -30,9 +33,10 @@ rutasur/
 |------|------------|
 | Apps móviles | Flutter / Dart |
 | Backend | Python + FastAPI |
-| Base de datos | PostgreSQL + PostGIS |
+| Base de datos | PostgreSQL 16 + PostGIS |
+| Nube | Render (API y panel) + Neon (base de datos) |
 | Control de versiones | Git + GitHub |
-| Calidad | Ruff, Bandit, pytest |
+| Calidad | Ruff, Bandit, pip-audit, pytest, flutter analyze |
 | Integración continua | GitHub Actions |
 
 ## Estrategia de ramas (Git Flow)
