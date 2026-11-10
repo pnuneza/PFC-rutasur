@@ -70,6 +70,13 @@ class _PantallaTransmisionState extends State<PantallaTransmision> {
     final c = widget.controlador;
     final s = c.sesion;
     final (color, fondo, titulo, mensaje) = switch (c.estado) {
+      EstadoEmision.conectando => (
+          ColoresRutaSur.demoradoTexto,
+          ColoresRutaSur.demoradoFondo,
+          'CONECTANDO…',
+          'Todavía no llega ninguna posición al servidor: los pasajeros aún no ven la unidad. '
+              'Espera unos segundos con la pantalla encendida.',
+        ),
       EstadoEmision.transmitiendo => (
           ColoresRutaSur.vigenteTexto,
           ColoresRutaSur.vigenteFondo,
@@ -90,6 +97,13 @@ class _PantallaTransmisionState extends State<PantallaTransmision> {
           'El teléfono no está recibiendo su ubicación. Revisa que el GPS esté encendido '
               'y que el teléfono no esté cubierto.',
         ),
+      EstadoEmision.sinPermisos => (
+          ColoresRutaSur.noConfiableTexto,
+          ColoresRutaSur.noConfiableFondo,
+          'SIN PERMISOS',
+          'Falta el permiso de ubicación o de notificaciones. Sin él, los pasajeros no ven '
+              'la unidad.',
+        ),
     };
     return PopScope(
       canPop: false, // salir no detiene el turno: para eso está el botón rojo
@@ -98,12 +112,7 @@ class _PantallaTransmisionState extends State<PantallaTransmision> {
           backgroundColor: ColoresRutaSur.primario,
           foregroundColor: Colors.white,
           automaticallyImplyLeading: false,
-          title: Text(
-            s == null
-                ? 'Unidad ${c.etiquetaUnidad ?? ''}'
-                : 'Unidad ${c.etiquetaUnidad ?? ''} · ${s.ramal.nombre} · '
-                    '${textoSentido(s.ramal, s.sentido).split(' · ').first}',
-          ),
+          title: Text('Unidad ${c.etiquetaUnidad ?? ''}'),
         ),
         body: SafeArea(
           child: Column(
@@ -112,11 +121,18 @@ class _PantallaTransmisionState extends State<PantallaTransmision> {
                 child: ListView(
                   padding: const EdgeInsets.all(20),
                   children: [
+                    if (s != null) ...[
+                      _Recorrido(
+                        texto: '${s.ramal.nombre} · ${textoSentido(s.ramal, s.sentido)}',
+                        destino: s.destino,
+                      ),
+                      const SizedBox(height: 20),
+                    ],
                     Center(
                       child: Container(
                         key: const Key('indicador'),
-                        width: 220,
-                        height: 220,
+                        width: 190,
+                        height: 190,
                         decoration: BoxDecoration(
                           color: fondo,
                           shape: BoxShape.circle,
@@ -132,8 +148,18 @@ class _PantallaTransmisionState extends State<PantallaTransmision> {
                     ),
                     const SizedBox(height: 16),
                     Text(mensaje, textAlign: TextAlign.center, key: const Key('mensaje')),
+                    if (c.estado == EstadoEmision.sinPermisos) ...[
+                      const SizedBox(height: 12),
+                      Center(
+                        child: FilledButton.icon(
+                          key: const Key('revisar-permisos'),
+                          onPressed: c.irAPermisos,
+                          icon: const Icon(Icons.lock_open),
+                          label: const Text('Revisar permisos'),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 20),
-                    if (s != null) _Dato('Va a', s.destino),
                     _Dato('Última posición enviada', _hace(c.ultimoEnvio)),
                     _Dato('Pendientes en el teléfono', '${c.pendientes}'),
                     _Dato(
@@ -176,6 +202,38 @@ class _PantallaTransmisionState extends State<PantallaTransmision> {
     final local = momento.toLocal();
     String dos(int n) => n.toString().padLeft(2, '0');
     return '${dos(local.hour)}:${dos(local.minute)}';
+  }
+}
+
+/// Ramal y sentido en grande: si el conductor eligió mal, lo nota de inmediato (D-22).
+class _Recorrido extends StatelessWidget {
+  const _Recorrido({required this.texto, required this.destino});
+
+  final String texto;
+  final String destino;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('recorrido'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ColoresRutaSur.primario.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ColoresRutaSur.primario, width: 2),
+      ),
+      child: Column(
+        children: [
+          Text(
+            texto,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: ColoresRutaSur.primario),
+          ),
+          const SizedBox(height: 4),
+          Text(textoDestino(destino), textAlign: TextAlign.center, style: const TextStyle(fontSize: 18)),
+        ],
+      ),
+    );
   }
 }
 
