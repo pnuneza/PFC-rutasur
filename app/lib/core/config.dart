@@ -36,6 +36,14 @@ abstract final class Config {
   /// Sin una posición nueva en este tiempo, C-03 muestra «Sin GPS».
   static const Duration sinGpsDespuesDe = Duration(seconds: 20);
 
+  /// C-03 dice «Transmitiendo» solo si el servidor confirmó posiciones hace menos de
+  /// este tiempo (3 envíos). Antes de la primera confirmación dice «Conectando» (D-22).
+  static const Duration confirmacionVigente = Duration(seconds: 45);
+
+  /// Una sesión guardada en el teléfono sin actividad por más de este tiempo no se
+  /// retoma: el servidor ya la cerró (D-19) y se pide el recorrido de nuevo (D-22).
+  static const Duration sesionAbandonada = Duration(hours: 2);
+
   /// Máximo por envío (P06 Tabla 54) y máximo guardado sin señal: unas 7 horas.
   static const int loteMaximo = 200;
   static const int colaMaxima = 5000;

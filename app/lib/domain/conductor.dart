@@ -58,6 +58,7 @@ class SesionConductor {
     required this.sentido,
     required this.destino,
     required this.inicio,
+    this.actividad,
   });
 
   factory SesionConductor.fromJson(Map<String, dynamic> json) => SesionConductor(
@@ -66,6 +67,7 @@ class SesionConductor {
         sentido: Sentido.desdeApi(json['sentido'] as String),
         destino: json['destino'] as String,
         inicio: DateTime.parse(json['inicio'] as String),
+        actividad: json['actividad'] == null ? null : DateTime.parse(json['actividad'] as String),
       );
 
   final String id;
@@ -74,12 +76,29 @@ class SesionConductor {
   final String destino;
   final DateTime inicio;
 
+  /// Última vez que el servidor confirmó posiciones de esta sesión. Solo se guarda en
+  /// el teléfono: sirve para no retomar una sesión de otro día (D-22).
+  final DateTime? actividad;
+
+  /// Momento de la última señal de vida conocida: la última confirmación o el inicio.
+  DateTime get ultimaActividad => actividad ?? inicio;
+
+  SesionConductor conActividad(DateTime momento) => SesionConductor(
+        id: id,
+        ramal: ramal,
+        sentido: sentido,
+        destino: destino,
+        inicio: inicio,
+        actividad: momento,
+      );
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'ramal': ramal.codigoApi,
         'sentido': sentido.codigoApi,
         'destino': destino,
         'inicio': inicio.toUtc().toIso8601String(),
+        if (actividad != null) 'actividad': actividad!.toUtc().toIso8601String(),
       };
 }
 

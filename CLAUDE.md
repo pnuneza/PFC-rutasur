@@ -1,7 +1,7 @@
 # CLAUDE.md — guía para trabajar en RutaSur
 
 Léelo completo antes de tocar el repositorio. **El repositorio es público:** aquí no va nada que no pueda leer cualquiera (ni contraseñas, ni cadenas de conexión, ni datos personales); lo privado vive en el Proyecto de Claude. Resume qué es el proyecto, cómo está
-armado, cómo se trabaja y qué reglas no se rompen. Actualizado al 10/11/2026 (v0.7.3).
+armado, cómo se trabaja y qué reglas no se rompen. Actualizado al 10/11/2026 (v0.7.4).
 
 ## 1. Qué es
 
@@ -10,7 +10,7 @@ Bus Characato S.A., Arequipa, Perú). Es el **proyecto de fin de carrera** de Pi
 Núñez Aco (Ingeniería de Sistemas, UCSM). Habla con él en **español**, en lenguaje sencillo.
 
 - **App del pasajero.** Mapa, paraderos, ETA (minutos que faltan) y favoritos. No pide cuenta.
-- **App del conductor.** Envía el GPS cada 5 s. Es la única fuente de posición, así que no hay «combis fantasma».
+- **App del conductor.** Envía el GPS cada 5 s. Es la única fuente de posición, así que no hay «combis fantasma». Solo dice «Transmitiendo» si el servidor confirmó posiciones hace menos de 45 s, y no retoma sesiones de más de 2 h sin actividad (D-22).
 - **Panel web de administración.** Muestra la flota, permite editar rutas y paraderos, gestionar unidades y cuentas, y revisar el registro de eventos.
 - **API en la nube.** Recibe posiciones, calcula el ETA y atiende las apps y el panel.
 
@@ -32,7 +32,7 @@ Regla de Pierre: **no se pasa al siguiente módulo sin terminar por completo el 
 | M4 | App del conductor | ✅ v0.5.0, probada en un teléfono real |
 | M5 | App del pasajero completa | ✅ v0.6.0 y v0.6.1 |
 | M6 | Panel de administración | ✅ v0.7.0 y v0.7.1, en producción |
-| M7 | Prueba de campo (piloto) | 🟡 en curso: 1.ª prueba real el 10/11 (2 viajes, D-20 y D-21 → v0.7.3) |
+| M7 | Prueba de campo (piloto) | 🟡 en curso: 1.ª prueba real el 10/11 (2 viajes, D-20 y D-21 → v0.7.3; D-22 → v0.7.4) |
 
 El M7 se hace del 2 al 27/11/2026:
 
@@ -121,7 +121,7 @@ Investigación II todavía lo menciona y está por confirmar con Pierre.
 - **Commits** con Conventional Commits, en español.
 - **En la nube de Claude:** se puede hacer push, crear PR y fusionar por la API REST: `gh api repos/pnuneza/PFC-rutasur/pulls`, luego `PUT pulls/N/merge` con `merge_method=merge`. GraphQL, tags, releases y logs de Actions están bloqueados.
 - **Fallas de la CI:** se leen como anotaciones, con `gh api .../check-runs/<id>/annotations`. Los scripts de `.github/scripts` publican los errores de Flutter y de Gradle.
-- **Los tags los crea Pierre en su PC.** Hay que darle los comandos con el SHA exacto: `git tag -a vX.Y.Z <sha> -m "…"` y luego `git push origin vX.Y.Z`. Existen de v0.2.0 a v0.7.1; v0.7.2 y v0.7.3 se le pasaron a Pierre (confirmar que las creó).
+- **Los tags los crea Pierre en su PC.** Hay que darle los comandos con el SHA exacto: `git tag -a vX.Y.Z <sha> -m "…"` y luego `git push origin vX.Y.Z`. Existen de v0.2.0 a v0.7.2; v0.7.3 y v0.7.4 se le pasaron a Pierre (confirmar que las creó).
 - **Al empezar una rama nueva en la nube:** configurar `git config --add remote.origin.fetch "+refs/heads/RAMA:refs/remotes/origin/RAMA"` y luego `git branch -u origin/RAMA`.
 - **Versiones:** se suben juntas en `app/pubspec.yaml`, `backend/pyproject.toml` y `backend/app/__init__.py`.
 - **Defectos:** cada uno se registra en `docs/calidad/registro-defectos.md` (D-NN) con su causa, su corrección y la prueba que lo cubre.
