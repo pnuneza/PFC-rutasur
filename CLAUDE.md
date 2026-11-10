@@ -98,7 +98,7 @@ render.yaml         API + panel
 **ETA:** `EstimadorDirecto`, que divide la distancia restante sobre el trazado entre la
 velocidad de **avance real sobre el trazado en los últimos 10 min** (incluye las paradas;
 mínimo 5 km/h). Con menos de 60 s de historia usa el promedio del GPS de las últimas
-4 posiciones. Desde la 0.7.3 (D-21): con 2 viajes reales el MAE bajó de 12,0 a 4,6 min. La interfaz `EstimadorETA`
+4 posiciones. Desde la 0.7.3 (D-21): con 2 viajes reales el MAE bajó de 11,3 a 4,7 min (`evaluar_eta`, 1659 estimaciones). La interfaz `EstimadorETA`
 permite enchufar otro método, por ejemplo un LSTM, sin tocar el resto. **El informe del PFC
 ya no habla de LSTM** (ver `claude/estado-actual-proyecto.md` en el Proyecto); la tesis de
 Investigación II todavía lo menciona y está por confirmar con Pierre.
