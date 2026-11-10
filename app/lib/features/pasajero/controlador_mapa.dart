@@ -20,10 +20,12 @@ class ControladorMapa extends ChangeNotifier {
     this._repositorio, {
     DateTime Function()? reloj,
     Duration intervalo = Config.intervaloConsulta,
+    Duration reintento = Config.reintentoConsulta,
     PreferenciasPasajero? preferencias,
     UbicacionPasajero? ubicacion,
   })  : _reloj = reloj ?? DateTime.now,
         _intervalo = intervalo,
+        _reintento = reintento,
         _preferencias = preferencias,
         _ubicacion = ubicacion;
 
@@ -32,8 +34,13 @@ class ControladorMapa extends ChangeNotifier {
   final UbicacionPasajero? _ubicacion;
   final DateTime Function() _reloj;
   final Duration _intervalo;
+  final Duration _reintento;
   Timer? _temporizador;
+  Timer? _temporizadorReintento;
   bool _cerrado = false;
+  bool _pausado = false;
+  bool _consultando = false;
+  int _fallosSeguidos = 0;
 
   // Ruta (se descarga una vez)
   Linea? linea;
@@ -88,8 +95,32 @@ class ControladorMapa extends ChangeNotifier {
       unawaited(actualizarUbicacion());
     }
     await refrescarUnidades();
+    _programarConsultas();
+  }
+
+  void _programarConsultas() {
     _temporizador?.cancel();
     _temporizador = Timer.periodic(_intervalo, (_) => refrescarUnidades());
+  }
+
+  /// La app pasó a segundo plano: deja de consultar (Android corta la red y cada
+  /// consulta fallaría). D-20.
+  void pausar() {
+    _pausado = true;
+    _temporizador?.cancel();
+    _temporizadorReintento?.cancel();
+  }
+
+  /// La app volvió al frente: consulta de inmediato, sin esperar los 15 s, y
+  /// vuelve a programar la consulta periódica. D-20.
+  Future<void> reanudar() async {
+    if (!_pausado) return;
+    _pausado = false;
+    if (linea == null) return; // la pantalla muestra el error de la ruta y su botón
+    // Lo ocurrido en segundo plano no cuenta: la red puede tardar en volver
+    _fallosSeguidos = 0;
+    _programarConsultas();
+    await refrescarUnidades();
   }
 
   Future<void> cargarLinea() async {
@@ -167,17 +198,35 @@ class ControladorMapa extends ChangeNotifier {
   }
 
   /// Consulta las unidades. Si falla, conserva las últimas conocidas (P06, P-01).
+  ///
+  /// Con unidades ya en pantalla, un fallo aislado no se anuncia: se reintenta a los
+  /// 3 s y el aviso «Sin conexión» aparece solo tras [Config.fallosParaAviso] fallos
+  /// seguidos (D-20). Si nunca hubo datos, se avisa desde el primer fallo.
   Future<void> refrescarUnidades() async {
+    if (_consultando || _cerrado) return;
+    _consultando = true;
+    _temporizadorReintento?.cancel();
     try {
       unidades = await _repositorio.unidadesActivas();
       ultimaActualizacion = _reloj();
+      _fallosSeguidos = 0;
       sinConexion = false;
     } on SinConexion {
-      sinConexion = true;
+      _registrarFallo();
     } on ErrorServicio {
-      sinConexion = true;
+      _registrarFallo();
+    } finally {
+      _consultando = false;
     }
     _notificar();
+  }
+
+  void _registrarFallo() {
+    _fallosSeguidos++;
+    sinConexion = ultimaActualizacion == null || _fallosSeguidos >= Config.fallosParaAviso;
+    if (!_pausado && !_cerrado) {
+      _temporizadorReintento = Timer(_reintento, refrescarUnidades);
+    }
   }
 
   /// Segundos desde la última consulta exitosa (indicador de P-01).
@@ -194,6 +243,7 @@ class ControladorMapa extends ChangeNotifier {
   void dispose() {
     _cerrado = true;
     _temporizador?.cancel();
+    _temporizadorReintento?.cancel();
     super.dispose();
   }
 

@@ -34,7 +34,7 @@ class ServicioLlegadas:
             raise RecursoNoEncontrado(f"El paradero {codigo_paradero} no existe o está inactivo")
 
         candidatos = self._flota.candidatos_llegada(
-            codigo_paradero, self._u.posiciones_para_velocidad
+            codigo_paradero, self._u.posiciones_para_velocidad, self._u.ventana_velocidad_s
         )
         estimaciones = [self._estimador.estimar(c, ahora) for c in candidatos]
 

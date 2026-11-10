@@ -10,8 +10,10 @@ Para cada sesión de emisión (un viaje de una unidad en una variante):
 2. Calcula la **llegada real** a cada paradero: el instante en que lo recorrido alcanzó
    la distancia del paradero, interpolando entre las dos posiciones de cada lado.
 3. **Reproduce el ETA** que la API habría dado en cada posición, con el mismo
-   `EstimadorDirecto` (mismo código, mismas reglas: velocidad promedio de las últimas
-   4 posiciones, mínimo 5 km/h, sin llegadas de más de 60 min).
+   `EstimadorDirecto` (mismo código, mismas reglas: velocidad = avance real en los
+   últimos 10 min, mínimo 5 km/h, sin llegadas de más de 60 min). Con
+   `--solo-gps` reproduce el estimador de la 0.7.2 (velocidad del GPS de los últimos
+   20 s), para comparar.
 4. Compara: error = ETA estimado − tiempo real que faltaba. Positivo: la combi llegó
    antes de lo anunciado; negativo: llegó tarde.
 
@@ -33,7 +35,7 @@ import argparse
 import csv
 import math
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, time, timedelta
 from statistics import fmean
 from zoneinfo import ZoneInfo
@@ -47,6 +49,8 @@ from app.services.estimador_eta import EstimadorDirecto
 LIMA = ZoneInfo("America/Lima")
 HORIZONTES_MIN = (5, 10, 20, 40, 60)
 TOLERANCIA_S = 120  # «acierta» si el error es de 2 minutos o menos
+# El estimador de la 0.7.2: nunca usa la ventana, solo la velocidad del GPS
+SOLO_GPS = replace(UMBRALES_POR_DEFECTO, ventana_minima_s=10**9)
 
 
 # ----------------------------------------------------------------------
@@ -137,6 +141,11 @@ def reproducir(
         siguiente = lectura.en + timedelta(seconds=cada_s)
         desde = max(0, i + 1 - umbrales.posiciones_para_velocidad)
         recientes = [x.velocidad_kmh for x in reversed(viaje.lecturas[desde : i + 1])]
+        # Igual que la API: primera lectura de la ventana reciente (D-21)
+        limite = lectura.en - timedelta(seconds=umbrales.ventana_velocidad_s)
+        inicio = next(x for x in viaje.lecturas[: i + 1] if x.en >= limite)
+        avance_m = lectura.recorrido_m - inicio.recorrido_m
+        duracion_s = (lectura.en - inicio.en).total_seconds()
         for p in viaje.paraderos:
             # RN-006: solo paraderos que la unidad todavía no pasó
             if p.codigo not in llegadas or p.distancia_m <= lectura.recorrido_m:
@@ -152,6 +161,8 @@ def reproducir(
                     distancia_paradero_m=p.distancia_m,
                     ultima_posicion_en=lectura.en,
                     velocidades_recientes_kmh=recientes,
+                    avance_ventana_m=avance_m,
+                    duracion_ventana_s=duracion_s,
                 ),
                 lectura.en,
             )
@@ -351,6 +362,11 @@ def principal(argv: list[str] | None = None) -> int:
     p.add_argument("--unidad", help="Etiqueta de la unidad, por ejemplo 07")
     p.add_argument("--cada", type=int, default=60, help="Segundos entre estimaciones (60)")
     p.add_argument("--csv", help="Archivo de la hoja de contraste")
+    p.add_argument(
+        "--solo-gps",
+        action="store_true",
+        help="Estimador de la 0.7.2: solo la velocidad del GPS de los últimos 20 s",
+    )
     args = p.parse_args(argv)
 
     from app.db.conexion import obtener_motor  # solo al usarla desde la consola
@@ -359,7 +375,8 @@ def principal(argv: list[str] | None = None) -> int:
     if not viajes:
         print("No hay viajes en ese periodo. Las posiciones se conservan 14 días.")
         return 1
-    contrastes = [c for v in viajes for c in reproducir(v, args.cada)]
+    umbrales = SOLO_GPS if args.solo_gps else UMBRALES_POR_DEFECTO
+    contrastes = [c for v in viajes for c in reproducir(v, args.cada, umbrales)]
     print(informe(viajes, contrastes))
     if args.csv:
         escribir_csv(args.csv, contrastes)

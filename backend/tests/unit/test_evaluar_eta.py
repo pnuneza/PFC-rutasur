@@ -6,6 +6,7 @@ import pytest
 
 from app.domain.modelos import Ramal, Sentido
 from app.herramientas.evaluar_eta import (
+    SOLO_GPS,
     Contraste,
     Lectura,
     ParaderoDeViaje,
@@ -79,10 +80,13 @@ def test_una_parada_larga_hace_que_la_combi_llegue_tarde():
     assert primera.estimado_en == INICIO
     assert primera.eta_s == pytest.approx(300, abs=5)
     assert primera.error_s == pytest.approx(-180, abs=5)
-    # Y al revés: con la combi detenida, la velocidad cae al mínimo (5 km/h) y la app
-    # anuncia de más. Es una debilidad conocida del estimador directo.
+    # Con la combi detenida, el estimador de la 0.7.2 (solo GPS) anunciaba de más: la
+    # velocidad caía al mínimo de 5 km/h. Con la ventana de 10 min el error baja (D-21).
     detenida = [c for c in contrastes if parada[3].en <= c.estimado_en <= t0]
-    assert detenida and all(c.error_s > 0 for c in detenida)
+    viejo = reproducir(viaje(antes + parada + despues), umbrales=SOLO_GPS)
+    detenida_vieja = [c for c in viejo if parada[3].en <= c.estimado_en <= t0]
+    assert detenida_vieja and all(c.error_s > 0 for c in detenida_vieja)
+    assert resumir(detenida).mae_s < resumir(detenida_vieja).mae_s / 2
 
 
 def test_no_se_evaluan_llegadas_que_la_app_no_muestra():

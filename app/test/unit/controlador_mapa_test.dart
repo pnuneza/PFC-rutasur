@@ -41,15 +41,80 @@ void main() {
     repositorio.fallo = const SinConexion();
 
     await controlador.refrescarUnidades();
+    await controlador.refrescarUnidades();
 
     expect(controlador.sinConexion, isTrue);
     expect(controlador.unidades.single.etiqueta, '07');
+  });
+
+  test('un fallo aislado con unidades en pantalla no muestra «Sin conexión» (D-20)', () async {
+    await controlador.iniciar();
+    repositorio.fallo = const SinConexion();
+
+    await controlador.refrescarUnidades();
+
+    expect(controlador.sinConexion, isFalse);
+    expect(controlador.unidades.single.etiqueta, '07');
+  });
+
+  test('sin datos previos, el primer fallo ya se avisa', () async {
+    await controlador.cargarLinea();
+    repositorio.fallo = const SinConexion();
+
+    await controlador.refrescarUnidades();
+
+    expect(controlador.sinConexion, isTrue);
+  });
+
+  test('tras un fallo reintenta a los pocos segundos, sin esperar los 15 s (D-20)', () async {
+    final rapido = ControladorMapa(
+      repositorio,
+      reloj: () => ahora,
+      intervalo: const Duration(hours: 1),
+      reintento: const Duration(milliseconds: 20),
+    );
+    addTearDown(rapido.dispose);
+    await rapido.iniciar();
+    repositorio.fallo = const SinConexion();
+    await rapido.refrescarUnidades();
+    final antes = repositorio.consultasUnidades;
+
+    repositorio.fallo = null;
+    repositorio.unidades = [unidadDePrueba(etiqueta: '12')];
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+
+    expect(repositorio.consultasUnidades, antes + 1);
+    expect(rapido.unidades.single.etiqueta, '12');
+    expect(rapido.sinConexion, isFalse);
+  });
+
+  test('al volver a la app consulta de inmediato y olvida los fallos en segundo plano (D-20)',
+      () async {
+    await controlador.iniciar();
+    controlador.pausar();
+    final antes = repositorio.consultasUnidades;
+
+    repositorio.unidades = [unidadDePrueba(etiqueta: '12')];
+    await controlador.reanudar();
+
+    expect(repositorio.consultasUnidades, antes + 1);
+    expect(controlador.unidades.single.etiqueta, '12');
+    expect(controlador.sinConexion, isFalse);
+  });
+
+  test('reanudar sin haber pausado no repite la consulta', () async {
+    await controlador.iniciar();
+    final antes = repositorio.consultasUnidades;
+    await controlador.reanudar();
+    expect(repositorio.consultasUnidades, antes);
   });
 
   test('al volver la conexión se actualiza y se quita el aviso', () async {
     await controlador.iniciar();
     repositorio.fallo = const SinConexion();
     await controlador.refrescarUnidades();
+    await controlador.refrescarUnidades();
+    expect(controlador.sinConexion, isTrue);
 
     repositorio.fallo = null;
     repositorio.unidades = [unidadDePrueba(etiqueta: '12')];

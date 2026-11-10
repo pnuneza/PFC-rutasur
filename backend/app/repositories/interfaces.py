@@ -40,7 +40,7 @@ class RepositorioFlota(Protocol):
     def listar_unidades_en_servicio(self, ramal: Ramal | None) -> list[UnidadEnServicio]: ...
 
     def candidatos_llegada(
-        self, codigo_paradero: str, n_velocidades: int
+        self, codigo_paradero: str, n_velocidades: int, ventana_s: int = 600
     ) -> list[CandidatoLlegada]: ...
 
 

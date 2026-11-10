@@ -10,6 +10,7 @@ import '../../../core/tema.dart';
 import '../../../domain/geometria.dart';
 import '../../../domain/modelos.dart';
 import '../controlador_mapa.dart';
+import '../formato.dart';
 import 'etiqueta_estado.dart';
 
 /// «Actualizado hace 8 s» en verde, o «Sin conexión» en rojo (P06, P-01 #3).
@@ -43,15 +44,17 @@ class _IndicadorActualizacionState extends State<IndicadorActualizacion> {
   @override
   Widget build(BuildContext context) {
     final c = widget.controlador;
+    final segundos = c.segundosDesdeActualizacion();
     if (c.sinConexion) {
-      return const EtiquetaEstado(
-        texto: 'Sin conexión',
+      return EtiquetaEstado(
+        texto: segundos == null
+            ? 'Sin conexión a internet'
+            : 'Sin conexión · último dato ${textoAntiguedad(segundos)}',
         colorTexto: ColoresRutaSur.noConfiableTexto,
         colorFondo: ColoresRutaSur.noConfiableFondo,
         icono: Icons.cloud_off,
       );
     }
-    final segundos = c.segundosDesdeActualizacion();
     if (segundos == null) return const SizedBox.shrink();
     final reciente = segundos <= 30;
     return EtiquetaEstado(

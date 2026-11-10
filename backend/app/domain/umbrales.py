@@ -22,6 +22,10 @@ class Umbrales:
     posiciones_para_velocidad: int = 4  # promedio de las últimas N posiciones válidas
     velocidad_minima_kmh: float = 5.0  # evita dividir entre cero con la unidad detenida
     eta_maximo_s: int = 3600  # RN-007: no se muestran llegadas de más de 60 min
+    # Velocidad = avance real en los últimos 10 min (D-21: la combi para cada 1–2 min y la
+    # velocidad instantánea del GPS daba ETAs de hasta 4 veces lo real en el piloto)
+    ventana_velocidad_s: int = 600
+    ventana_minima_s: int = 60  # con menos historia se usa el promedio del GPS
 
     # Frescura del dato (RN-005, Figura 26 de P05)
     frescura_vigente_s: int = 30

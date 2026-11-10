@@ -13,6 +13,14 @@ abstract final class Config {
   /// Frecuencia de consulta de unidades y llegadas (P05, Tabla 38: consulta periódica).
   static const Duration intervaloConsulta = Duration(seconds: 15);
 
+  /// Tras una consulta fallida se reintenta pronto, sin esperar los 15 s (D-20).
+  static const Duration reintentoConsulta = Duration(seconds: 3);
+
+  /// Fallos seguidos antes de avisar «Sin conexión» cuando ya hay datos en pantalla.
+  /// Al volver a la app, Android tarda un momento en devolver la red: un solo fallo
+  /// no es una desconexión (D-20).
+  static const int fallosParaAviso = 2;
+
   /// Tiempo máximo de espera de cada petición.
   static const Duration tiempoEspera = Duration(seconds: 10);
 

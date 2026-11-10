@@ -18,7 +18,9 @@ _SQL_UNIDADES = text("""
 
 # RN-006: solo las sesiones abiertas cuya variante incluye el paradero y que
 # todavía no lo pasaron (lo recorrido es menor que la distancia del paradero).
-# Trae además las velocidades de las últimas N posiciones válidas.
+# Trae además las velocidades de las últimas N posiciones válidas y, para medir el
+# avance real (D-21), dónde estaba la unidad al inicio de la ventana: la primera
+# posición válida de los últimos :ventana segundos, proyectada sobre el trazado.
 _SQL_CANDIDATOS = text("""
     SELECT u.etiqueta, v.ramal::text AS ramal, v.sentido::text AS sentido, v.destino,
            s.ultima_distancia_m, pv.distancia_desde_inicio_m, s.ultima_posicion_en,
@@ -26,13 +28,24 @@ _SQL_CANDIDATOS = text("""
                    FROM posicion p
                   WHERE p.sesion_id = s.id AND p.valida
                   ORDER BY p.capturada_en DESC
-                  LIMIT :n) AS velocidades
+                  LIMIT :n) AS velocidades,
+           s.ultima_distancia_m - w.recorrido AS avance_ventana_m,
+           w.duracion_s AS duracion_ventana_s
       FROM paradero pa
       JOIN paradero_variante pv ON pv.paradero_id = pa.id
       JOIN sesion_emision s     ON s.variante_id = pv.variante_id
                                AND s.estado IN ('ACTIVA', 'SIN_SENAL')
       JOIN variante v           ON v.id = s.variante_id
       JOIN unidad u             ON u.id = s.unidad_id
+      LEFT JOIN LATERAL (
+           SELECT ST_Length(ST_LineSubstring(v.trazado, 0,
+                            ST_LineLocatePoint(v.trazado, p.coordenada))::geography) AS recorrido,
+                  extract(epoch FROM s.ultima_posicion_en - p.capturada_en) AS duracion_s
+             FROM posicion p
+            WHERE p.sesion_id = s.id AND p.valida
+              AND p.capturada_en >= s.ultima_posicion_en - make_interval(secs => :ventana)
+            ORDER BY p.capturada_en
+            LIMIT 1) w ON true
      WHERE pa.codigo = :codigo
        AND pa.activo
        AND s.ultima_distancia_m IS NOT NULL
@@ -60,10 +73,10 @@ class RepositorioFlotaSQL:
         ]
 
     def candidatos_llegada(
-        self, codigo_paradero: str, n_velocidades: int
+        self, codigo_paradero: str, n_velocidades: int, ventana_s: int = 600
     ) -> list[CandidatoLlegada]:
         filas = self._s.execute(
-            _SQL_CANDIDATOS, {"codigo": codigo_paradero, "n": n_velocidades}
+            _SQL_CANDIDATOS, {"codigo": codigo_paradero, "n": n_velocidades, "ventana": ventana_s}
         ).mappings()
         return [
             CandidatoLlegada(
@@ -75,6 +88,12 @@ class RepositorioFlotaSQL:
                 distancia_paradero_m=float(f["distancia_desde_inicio_m"]),
                 ultima_posicion_en=f["ultima_posicion_en"],
                 velocidades_recientes_kmh=list(f["velocidades"]),
+                avance_ventana_m=_flotante(f["avance_ventana_m"]),
+                duracion_ventana_s=_flotante(f["duracion_ventana_s"]),
             )
             for f in filas
         ]
+
+
+def _flotante(valor) -> float | None:
+    return None if valor is None else float(valor)

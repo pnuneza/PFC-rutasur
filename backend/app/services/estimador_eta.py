@@ -23,12 +23,16 @@ class EstimadorETA(Protocol):
 
 
 class EstimadorDirecto:
-    """ETA = distancia restante sobre el trazado ÷ velocidad promedio reciente.
+    """ETA = distancia restante sobre el trazado ÷ velocidad reciente.
 
     1. Distancia restante: distancia acumulada del paradero menos lo que la unidad
        ya recorrió, ambas medidas sobre el trazado y no en línea recta.
-    2. Velocidad: promedio de las últimas posiciones válidas, con un mínimo de
-       5 km/h para que una unidad detenida no produzca una división entre cero.
+    2. Velocidad: lo que la unidad avanzó de verdad sobre la ruta en los últimos
+       10 minutos, paradas incluidas. Si todavía no hay un minuto de historia, el
+       promedio de la velocidad del GPS en las últimas posiciones. En ambos casos con
+       un mínimo de 5 km/h, para que una unidad detenida no divida entre cero.
+       (Hasta la 0.7.2 se usaba solo el GPS de los últimos 20 s; en el piloto del
+       10/11/2026 eso dio un error medio de 18 min frente a 2,5 min con la ventana: D-21.)
     3. Confiabilidad: el dato deja de ser confiable si la última posición tiene
        más de 90 s (RN-005).
     """
@@ -42,9 +46,23 @@ class EstimadorDirecto:
         promedio = fmean(conocidas) if conocidas else 0.0
         return max(promedio, self._u.velocidad_minima_kmh)
 
+    def velocidad_de_avance_kmh(self, candidato: CandidatoLlegada) -> float | None:
+        """Avance sobre la ruta ÷ tiempo, en la ventana reciente; None si hay poca historia."""
+        duracion = candidato.duracion_ventana_s
+        if candidato.avance_ventana_m is None or duracion is None:
+            return None
+        if duracion < self._u.ventana_minima_s:
+            return None
+        return max(candidato.avance_ventana_m, 0.0) / duracion * 3.6
+
     def estimar(self, candidato: CandidatoLlegada, ahora: datetime) -> EstimacionLlegada:
         restante_m = max(candidato.distancia_paradero_m - candidato.distancia_recorrida_m, 0.0)
-        velocidad_kmh = self.velocidad_estimada_kmh(candidato.velocidades_recientes_kmh)
+        de_avance = self.velocidad_de_avance_kmh(candidato)
+        velocidad_kmh = (
+            max(de_avance, self._u.velocidad_minima_kmh)
+            if de_avance is not None
+            else self.velocidad_estimada_kmh(candidato.velocidades_recientes_kmh)
+        )
         eta_s = restante_m / (velocidad_kmh * KMH_A_MS)
 
         antiguedad_s = max(int((ahora - candidato.ultima_posicion_en).total_seconds()), 0)
