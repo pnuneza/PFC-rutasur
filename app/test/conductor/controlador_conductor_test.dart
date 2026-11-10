@@ -50,6 +50,79 @@ void main() {
       expect(e.controlador.etapa, Etapa.transmision);
       expect(e.controlador.pendientes, 1);
       expect(e.gps.activo, isTrue);
+      expect(e.controlador.estado, EstadoEmision.conectando); // verde recién al confirmar
+    });
+
+    test('una sesión de otro día no se retoma: pide el recorrido de nuevo (D-22)', () async {
+      final e = Escenario()
+        ..almacen.acceso = accesoVigente()
+        ..almacen.sesion = SesionConductor(
+          id: 's-vieja',
+          ramal: Ramal.cerrillo,
+          sentido: Sentido.vuelta,
+          destino: 'Cerrillo',
+          inicio: ahoraFijo.subtract(const Duration(days: 3)),
+          actividad: ahoraFijo.subtract(const Duration(days: 3, hours: -1)),
+        )
+        ..almacen.cola = [
+          Lectura(
+            id: 'p',
+            lat: 1,
+            lon: 2,
+            velocidadKmh: 0,
+            rumbo: 0,
+            precisionM: 5,
+            capturada: ahoraFijo.subtract(const Duration(days: 3)),
+          ),
+        ];
+      await e.controlador.iniciar();
+      expect(e.controlador.etapa, Etapa.recorrido);
+      expect(e.controlador.aviso, contains('Cerrillo · Subida'));
+      expect(e.controlador.aviso, contains('ya terminó'));
+      expect(e.almacen.sesion, isNull);
+      expect(e.almacen.cola, isEmpty);
+      expect(e.gps.activo, isFalse);
+    });
+
+    test('una sesión con actividad reciente sí se retoma, aunque haya empezado hace horas', () async {
+      final e = Escenario()
+        ..almacen.acceso = accesoVigente()
+        ..almacen.sesion = SesionConductor(
+          id: 's-1',
+          ramal: Ramal.mollebaya,
+          sentido: Sentido.ida,
+          destino: 'Centro (2 de Mayo)',
+          inicio: ahoraFijo.subtract(const Duration(hours: 5)),
+          actividad: ahoraFijo.subtract(const Duration(minutes: 30)),
+        );
+      await e.controlador.iniciar();
+      expect(e.controlador.etapa, Etapa.transmision);
+    });
+
+    test('también cuenta como actividad una lectura reciente en la cola (sin red)', () async {
+      final e = Escenario()
+        ..almacen.acceso = accesoVigente()
+        ..almacen.sesion = SesionConductor(
+          id: 's-1',
+          ramal: Ramal.mollebaya,
+          sentido: Sentido.ida,
+          destino: 'Centro (2 de Mayo)',
+          inicio: ahoraFijo.subtract(const Duration(hours: 3)),
+        )
+        ..almacen.cola = [
+          Lectura(
+            id: 'p',
+            lat: 1,
+            lon: 2,
+            velocidadKmh: 0,
+            rumbo: 0,
+            precisionM: 5,
+            capturada: ahoraFijo.subtract(const Duration(minutes: 10)),
+          ),
+        ];
+      await e.controlador.iniciar();
+      expect(e.controlador.etapa, Etapa.transmision);
+      expect(e.controlador.pendientes, 1);
     });
 
     test('si al retomar faltan permisos, pide los permisos', () async {
@@ -206,10 +279,12 @@ void main() {
       await e.transmitiendo();
       e.gps.emitir();
       await e.controlador.capturar();
+      await e.controlador.enviar();
+      expect(e.controlador.estado, EstadoEmision.transmitiendo);
       e.reloj.avanzar(const Duration(seconds: 25));
       await e.controlador.capturar();
       expect(e.controlador.estado, EstadoEmision.sinGps);
-      expect(e.controlador.pendientes, 1);
+      expect(e.controlador.pendientes, 0);
       e.gps.emitir();
       await e.controlador.capturar();
       expect(e.controlador.estado, EstadoEmision.transmitiendo);
@@ -220,8 +295,65 @@ void main() {
       await e.transmitiendo();
       e.reloj.avanzar(const Duration(seconds: 10));
       await e.controlador.capturar();
-      expect(e.controlador.estado, EstadoEmision.transmitiendo);
+      expect(e.controlador.estado, EstadoEmision.conectando);
       expect(e.controlador.pendientes, 0);
+    });
+
+    test('«Transmitiendo» solo después de que el servidor confirma (D-22)', () async {
+      final e = Escenario();
+      await e.transmitiendo();
+      expect(e.controlador.estado, EstadoEmision.conectando);
+      e.gps.emitir();
+      await e.controlador.capturar();
+      expect(e.controlador.estado, EstadoEmision.conectando); // capturar no basta
+      e.reloj.avanzar(const Duration(seconds: 10));
+      await e.controlador.enviar();
+      expect(e.controlador.estado, EstadoEmision.transmitiendo);
+      // La confirmación queda guardada para no retomar la sesión otro día
+      expect(e.almacen.sesion?.actividad, ahoraFijo.add(const Duration(seconds: 10)));
+    });
+
+    test('si pasan más de 45 s sin confirmaciones deja de decir «Transmitiendo»', () async {
+      final e = Escenario();
+      await e.transmitiendo();
+      e.gps.emitir();
+      await e.controlador.capturar();
+      await e.controlador.enviar();
+      for (var i = 0; i < 10; i++) {
+        e.reloj.avanzar(const Duration(seconds: 5));
+        e.gps.emitir();
+        await e.controlador.capturar(); // el GPS sigue bien, pero no hay envíos confirmados
+      }
+      expect(e.controlador.estado, EstadoEmision.sinConexion);
+    });
+
+    test('si al volver a la app falta un permiso, lo dice en rojo y lleva a C-04', () async {
+      final e = Escenario();
+      await e.transmitiendo();
+      e.gps.emitir();
+      await e.controlador.capturar();
+      await e.controlador.enviar();
+      e.gps.permisos = const PermisosTelefono(
+        ubicacion: EstadoPermiso.concedido,
+        notificaciones: EstadoPermiso.denegado,
+        bateria: EstadoPermiso.concedido,
+      );
+      await e.controlador.alVolverALaApp();
+      expect(e.controlador.estado, EstadoEmision.sinPermisos);
+
+      e.controlador.irAPermisos();
+      expect(e.controlador.etapa, Etapa.permisos);
+      e.gps.permisos = const PermisosTelefono(
+        ubicacion: EstadoPermiso.concedido,
+        notificaciones: EstadoPermiso.concedido,
+        bateria: EstadoPermiso.concedido,
+      );
+      await e.controlador.alVolverALaApp(); // vuelve de los ajustes del teléfono
+      expect(e.controlador.permisos!.obligatoriosListos, isTrue);
+      await e.controlador.continuarDesdePermisos();
+      expect(e.controlador.etapa, Etapa.transmision);
+      expect(e.controlador.estado, EstadoEmision.conectando);
+      expect(e.servicio.sesionesAbiertas, 1); // sigue la misma sesión
     });
 
     test('envía de a 200 como máximo', () async {
@@ -296,6 +428,20 @@ void main() {
       expect(e.controlador.etapa, Etapa.recorrido);
       expect(e.almacen.sesion, isNull);
     });
+  });
+
+  test('la actividad de la sesión se guarda y se lee en el teléfono', () {
+    final s = SesionConductor(
+      id: 's-1',
+      ramal: Ramal.mollebaya,
+      sentido: Sentido.ida,
+      destino: 'Centro (2 de Mayo)',
+      inicio: ahoraFijo,
+    );
+    expect(s.ultimaActividad, ahoraFijo);
+    final leida = SesionConductor.fromJson(s.conActividad(ahoraFijo.add(const Duration(hours: 1))).toJson());
+    expect(leida.actividad, ahoraFijo.add(const Duration(hours: 1)));
+    expect(SesionConductor.fromJson(s.toJson()).actividad, isNull);
   });
 
   test('el vencimiento se lee del propio token', () {

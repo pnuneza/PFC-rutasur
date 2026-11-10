@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rutasur/domain/conductor.dart';
+import 'package:rutasur/domain/modelos.dart';
 import 'package:rutasur/domain/repositorio.dart';
 import 'package:rutasur/features/conductor/app_conductor.dart';
 import 'package:rutasur/features/conductor/controlador_conductor.dart';
@@ -109,6 +110,14 @@ void main() {
     final e = Escenario();
     await e.transmitiendo();
     await abrirApp(tester, escenario: e);
+    // Verde recién cuando el servidor confirma (D-22); el recorrido se ve en grande
+    expect(find.text('CONECTANDO…'), findsOneWidget);
+    expect(find.text('Mollebaya · Bajada · hacia el Centro'), findsOneWidget);
+    expect(find.text('Va a Centro (2 de Mayo)'), findsOneWidget);
+    e.gps.emitir();
+    await e.controlador.capturar();
+    await e.controlador.enviar();
+    await tester.pump();
     expect(find.text('TRANSMITIENDO'), findsOneWidget);
     expect(find.text('Detener transmisión'), findsOneWidget);
 
@@ -136,5 +145,39 @@ void main() {
     await tester.pumpAndSettle();
     expect(e.servicio.cerradas, ['sesion-1']);
     expect(find.textContaining('Turno terminado'), findsOneWidget);
+  });
+
+  testWidgets('C-03 sin permisos: aviso rojo y botón para revisarlos (D-22)', (tester) async {
+    final e = Escenario();
+    await e.transmitiendo();
+    await abrirApp(tester, escenario: e);
+    e.gps.permisos = const PermisosTelefono(
+      ubicacion: EstadoPermiso.denegado,
+      notificaciones: EstadoPermiso.concedido,
+      bateria: EstadoPermiso.concedido,
+    );
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+    expect(find.text('SIN PERMISOS'), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('revisar-permisos')));
+    await tester.pumpAndSettle();
+    expect(find.text('Permisos del teléfono'), findsOneWidget);
+  });
+
+  testWidgets('una sesión de otro día no se retoma: C-02 explica por qué (D-22)', (tester) async {
+    final e = Escenario()
+      ..almacen.acceso = accesoVigente()
+      ..almacen.sesion = SesionConductor(
+        id: 's-vieja',
+        ramal: Ramal.mollebaya,
+        sentido: Sentido.ida,
+        destino: 'Centro (2 de Mayo)',
+        inicio: ahoraFijo.subtract(const Duration(days: 2)),
+      );
+    await abrirApp(tester, escenario: e);
+    expect(find.text('¿Qué recorrido vas a hacer?'), findsOneWidget);
+    expect(find.textContaining('ya terminó'), findsOneWidget);
   });
 }

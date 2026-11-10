@@ -18,15 +18,23 @@ class AppConductor extends StatefulWidget {
   State<AppConductor> createState() => _AppConductorState();
 }
 
-class _AppConductorState extends State<AppConductor> {
+class _AppConductorState extends State<AppConductor> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     widget.controlador.iniciar();
+  }
+
+  /// Al volver a la app se revisan los permisos: pudieron cambiar en los ajustes (D-22).
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState estado) {
+    if (estado == AppLifecycleState.resumed) widget.controlador.alVolverALaApp();
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     widget.controlador.dispose();
     super.dispose();
   }

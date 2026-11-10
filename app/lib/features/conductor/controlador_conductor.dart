@@ -14,11 +14,15 @@ import '../../core/config.dart';
 import '../../domain/conductor.dart';
 import '../../domain/modelos.dart';
 import '../../domain/repositorio.dart';
+import '../pasajero/formato.dart';
 
 enum Etapa { cargando, ingreso, recorrido, permisos, transmision }
 
 /// Indicador grande de C-03: verde, ámbar o rojo.
-enum EstadoEmision { transmitiendo, sinConexion, sinGps }
+///
+/// Verde solo con pruebas: el servidor confirmó posiciones hace menos de 45 s. Mientras
+/// no llega la primera confirmación es «Conectando» (D-22).
+enum EstadoEmision { conectando, transmitiendo, sinConexion, sinGps, sinPermisos }
 
 class ControladorConductor extends ChangeNotifier {
   ControladorConductor({
@@ -58,7 +62,7 @@ class ControladorConductor extends ChangeNotifier {
   String? aviso;
 
   // --- C-03 ---
-  EstadoEmision estado = EstadoEmision.transmitiendo;
+  EstadoEmision estado = EstadoEmision.conectando;
   List<Lectura> cola = [];
   DateTime? ultimoEnvio;
   AcuseEnvio? ultimoAcuse;
@@ -66,6 +70,7 @@ class ControladorConductor extends ChangeNotifier {
 
   PosicionGps? _ultimaPosicion;
   DateTime? _ultimaPosicionEn;
+  DateTime? _ultimaConfirmacion;
   bool _sinRed = false;
   bool _enviando = false;
   bool _cerrado = false;
@@ -88,6 +93,18 @@ class ControladorConductor extends ChangeNotifier {
     acceso = guardado;
     sesion = await _almacen.leerSesion();
     cola = await _almacen.leerCola();
+    final guardada = sesion;
+    if (guardada != null && _abandonada(guardada)) {
+      // Una sesión de otro día no se retoma: el servidor ya la cerró (D-19) y el
+      // conductor creería que transmite con el recorrido viejo (D-22).
+      await _terminarEnTelefono(
+        aviso: 'Tu transmisión anterior (${guardada.ramal.nombre} · '
+            '${textoSentido(guardada.ramal, guardada.sentido).split(' · ').first}, ${_fecha(guardada.ultimaActividad)}) '
+            'ya terminó. Elige el recorrido de ahora para empezar.',
+      );
+      _notificar();
+      return;
+    }
     if (sesion == null) {
       _cambiar(Etapa.recorrido);
     } else {
@@ -95,6 +112,33 @@ class ControladorConductor extends ChangeNotifier {
       await _arrancarEmisionSiHayPermisos();
     }
   }
+
+  bool _abandonada(SesionConductor s) {
+    var ultima = s.ultimaActividad;
+    for (final l in cola) {
+      if (l.capturada.isAfter(ultima)) ultima = l.capturada;
+    }
+    return _reloj().difference(ultima) > Config.sesionAbandonada;
+  }
+
+  String _fecha(DateTime momento) {
+    final local = momento.toLocal();
+    String dos(int n) => n.toString().padLeft(2, '0');
+    return '${dos(local.day)}/${dos(local.month)} ${dos(local.hour)}:${dos(local.minute)}';
+  }
+
+  /// La app vuelve al frente: los permisos pudieron cambiar en los ajustes del teléfono.
+  Future<void> alVolverALaApp() async {
+    if (etapa == Etapa.permisos) {
+      await revisarPermisos();
+    } else if (etapa == Etapa.transmision) {
+      await revisarPermisos();
+      _recalcularEstado();
+    }
+  }
+
+  /// «Revisar permisos» en C-03 cuando falta alguno (D-22).
+  void irAPermisos() => _cambiar(Etapa.permisos);
 
   // ------------------------------------------------------------------
   // C-01 Inicio de sesión
@@ -214,8 +258,9 @@ class ControladorConductor extends ChangeNotifier {
 
   Future<void> _arrancarEmision() async {
     final s = sesion!;
-    estado = EstadoEmision.transmitiendo;
+    estado = EstadoEmision.conectando; // verde recién con la primera confirmación (D-22)
     _sinRed = false;
+    _ultimaConfirmacion = null;
     _ultimaPosicion = null;
     _ultimaPosicionEn = _reloj(); // se da un margen antes de declarar «Sin GPS»
     etapa = Etapa.transmision;
@@ -244,10 +289,13 @@ class ControladorConductor extends ChangeNotifier {
     final posicion = _ultimaPosicion;
     final desde = _ultimaPosicionEn;
     if (desde == null || _reloj().difference(desde) > Config.sinGpsDespuesDe) {
-      _cambiarEstado(EstadoEmision.sinGps); // el GPS dejó de dar posiciones
+      _recalcularEstado(); // el GPS dejó de dar posiciones: «Sin GPS»
       return;
     }
-    if (posicion == null) return; // todavía esperando la primera posición
+    if (posicion == null) {
+      _recalcularEstado(); // todavía esperando la primera posición
+      return;
+    }
     final velocidad =
         posicion.velocidadMs == null ? null : (posicion.velocidadMs! * 3.6).clamp(0.0, 200.0);
     cola.add(Lectura(
@@ -263,7 +311,7 @@ class ControladorConductor extends ChangeNotifier {
       cola.removeRange(0, cola.length - Config.colaMaxima); // se pierde lo más antiguo
     }
     await _almacen.guardarCola(cola);
-    _cambiarEstado(_sinRed ? EstadoEmision.sinConexion : EstadoEmision.transmitiendo);
+    _recalcularEstado();
   }
 
   /// Envía hasta 200 lecturas de la cola y borra solo las confirmadas (cada 15 s).
@@ -280,11 +328,15 @@ class ControladorConductor extends ChangeNotifier {
       await _almacen.guardarCola(cola);
       ultimoAcuse = acuse;
       ultimoEnvio = _reloj();
+      _ultimaConfirmacion = ultimoEnvio;
       _sinRed = false;
-      if (estado != EstadoEmision.sinGps) estado = EstadoEmision.transmitiendo;
+      // Se recuerda la actividad para no retomar esta sesión otro día (D-22)
+      if (sesion?.id == s.id) {
+        sesion = s.conActividad(ultimoEnvio!);
+        await _almacen.guardarSesion(sesion);
+      }
     } on SinConexion {
       _sinRed = true; // la cola se conserva y se reenvía en el siguiente ciclo
-      if (estado != EstadoEmision.sinGps) estado = EstadoEmision.sinConexion;
     } on ErrorServicio catch (e) {
       if (e.codigo == 'VALIDATION_ERROR') {
         // Un lote que el servidor nunca aceptará (por ejemplo, el reloj del teléfono
@@ -297,8 +349,31 @@ class ControladorConductor extends ChangeNotifier {
       }
     } finally {
       _enviando = false;
+      if (etapa == Etapa.transmision) _recalcularEstado();
       _notificar();
     }
+  }
+
+  /// El indicador dice lo que de verdad pasa, en orden de gravedad (D-22).
+  void _recalcularEstado() {
+    final ahora = _reloj();
+    final desde = _ultimaPosicionEn;
+    final confirmada = _ultimaConfirmacion;
+    final EstadoEmision nuevo;
+    if (!(permisos?.obligatoriosListos ?? true)) {
+      nuevo = EstadoEmision.sinPermisos;
+    } else if (desde == null || ahora.difference(desde) > Config.sinGpsDespuesDe) {
+      nuevo = EstadoEmision.sinGps;
+    } else if (_sinRed) {
+      nuevo = EstadoEmision.sinConexion;
+    } else if (confirmada == null) {
+      nuevo = EstadoEmision.conectando;
+    } else if (ahora.difference(confirmada) > Config.confirmacionVigente) {
+      nuevo = EstadoEmision.sinConexion;
+    } else {
+      nuevo = EstadoEmision.transmitiendo;
+    }
+    _cambiarEstado(nuevo);
   }
 
   /// «Terminar turno» en D-01: envía lo pendiente si puede y cierra la sesión.
