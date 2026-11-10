@@ -130,6 +130,9 @@ class CandidatoLlegada:
     distancia_paradero_m: float
     ultima_posicion_en: datetime
     velocidades_recientes_kmh: list[float | None]
+    # Avance real sobre la ruta en los últimos minutos (incluye las paradas). None: sin datos
+    avance_ventana_m: float | None = None
+    duracion_ventana_s: float | None = None
 
 
 @dataclass(frozen=True, slots=True)

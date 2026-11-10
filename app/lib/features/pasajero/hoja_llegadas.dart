@@ -58,7 +58,7 @@ class HojaLlegadas extends StatefulWidget {
   State<HojaLlegadas> createState() => _HojaLlegadasState();
 }
 
-class _HojaLlegadasState extends State<HojaLlegadas> {
+class _HojaLlegadasState extends State<HojaLlegadas> with WidgetsBindingObserver {
   late final ControladorLlegadas _controlador =
       ControladorLlegadas(widget.repositorio, widget.paradero.codigo);
   late bool _favorito = widget.esFavorito;
@@ -78,11 +78,27 @@ class _HojaLlegadasState extends State<HojaLlegadas> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controlador.iniciar(); // se actualiza sola cada 15 s mientras la hoja está abierta
+  }
+
+  /// D-20: al salir de la app se pausan las consultas y al volver se actualiza al
+  /// instante, en vez de mostrar «Sin conexión» hasta la siguiente consulta.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState estado) {
+    switch (estado) {
+      case AppLifecycleState.resumed:
+        _controlador.reanudar();
+      case AppLifecycleState.paused || AppLifecycleState.hidden:
+        _controlador.pausar();
+      case AppLifecycleState.inactive || AppLifecycleState.detached:
+        break;
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controlador.dispose();
     super.dispose();
   }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:rutasur/core/tema.dart';
+import 'package:rutasur/domain/repositorio.dart';
 import 'package:rutasur/features/pasajero/app_pasajero.dart';
 import 'package:rutasur/features/pasajero/controlador_mapa.dart';
 import 'package:rutasur/features/pasajero/hoja_llegadas.dart';
@@ -127,6 +128,35 @@ void main() {
 
       expect(find.byType(HojaLlegadas), findsOneWidget);
       expect(find.text('Favorito'), findsOneWidget);
+      await cerrar(tester);
+    });
+
+    testWidgets('al volver a la app no muestra «Sin conexión» por un fallo aislado (D-20)',
+        (tester) async {
+      final repositorio = repositorioConUnidad();
+      await abrirApp(tester, preferencias: PreferenciasEnMemoria()..vista = true, repositorio: repositorio);
+      expect(find.textContaining('Actualizado hace'), findsOneWidget);
+
+      // Sale de la app y vuelve justo cuando Android todavía no devolvió la red
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      repositorio.fallo = const SinConexion();
+      final antes = repositorio.consultasUnidades;
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+      await tester.pump();
+      expect(repositorio.consultasUnidades, antes + 1); // consulta al instante
+      expect(find.textContaining('Sin conexión'), findsNothing);
+
+      // El reintento a los 3 s también falla: ahora sí hay un único aviso
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump();
+      expect(find.textContaining('Sin conexión · último dato'), findsOneWidget);
+      expect(find.textContaining('No hay conexión a internet'), findsNothing);
+
+      // Vuelve la red: el siguiente reintento quita el aviso
+      repositorio.fallo = null;
+      await tester.pump(const Duration(seconds: 3));
+      await tester.pump();
+      expect(find.textContaining('Sin conexión'), findsNothing);
       await cerrar(tester);
     });
 
