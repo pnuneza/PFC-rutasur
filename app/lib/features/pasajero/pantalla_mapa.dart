@@ -13,7 +13,6 @@ import 'formato.dart';
 import 'hoja_llegadas.dart';
 import 'hoja_unidad.dart';
 import 'pantalla_busqueda.dart';
-import 'widgets/etiqueta_estado.dart';
 import 'widgets/mapa_ruta.dart';
 import 'widgets/paneles.dart';
 
@@ -35,7 +34,7 @@ class PantallaMapa extends StatefulWidget {
   State<PantallaMapa> createState() => _PantallaMapaState();
 }
 
-class _PantallaMapaState extends State<PantallaMapa> {
+class _PantallaMapaState extends State<PantallaMapa> with WidgetsBindingObserver {
   late final ControladorMapa _controlador = ControladorMapa(
     widget.repositorio,
     preferencias: widget.preferencias,
@@ -87,11 +86,27 @@ class _PantallaMapaState extends State<PantallaMapa> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controlador.iniciar();
+  }
+
+  /// D-20: al salir de la app se pausan las consultas y al volver se actualiza al
+  /// instante, en vez de mostrar «Sin conexión» hasta la siguiente consulta.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState estado) {
+    switch (estado) {
+      case AppLifecycleState.resumed:
+        _controlador.reanudar();
+      case AppLifecycleState.paused || AppLifecycleState.hidden:
+        _controlador.pausar();
+      case AppLifecycleState.inactive || AppLifecycleState.detached:
+        break;
+    }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _controlador.dispose(); // detiene la consulta periódica
     super.dispose();
   }
@@ -154,16 +169,9 @@ class _PantallaMapaState extends State<PantallaMapa> {
               const SizedBox(height: 8),
               FiltroSentido(sentido: c.sentido, alElegir: c.elegirSentido),
               const SizedBox(height: 8),
+              // Un solo aviso de conexión (D-20): el indicador dice «Sin conexión» y la
+              // antigüedad del último dato; las unidades se ven atenuadas.
               IndicadorActualizacion(controlador: c),
-              if (c.sinConexion) ...[
-                const SizedBox(height: 8),
-                const EtiquetaEstado(
-                  texto: 'No hay conexión a internet. Las unidades se muestran con su último dato conocido.',
-                  colorTexto: ColoresRutaSur.noConfiableTexto,
-                  colorFondo: ColoresRutaSur.noConfiableFondo,
-                  icono: Icons.cloud_off,
-                ),
-              ],
             ],
           ),
         ),

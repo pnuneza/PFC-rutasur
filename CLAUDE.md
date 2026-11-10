@@ -1,7 +1,7 @@
 # CLAUDE.md — guía para trabajar en RutaSur
 
 Léelo completo antes de tocar el repositorio. **El repositorio es público:** aquí no va nada que no pueda leer cualquiera (ni contraseñas, ni cadenas de conexión, ni datos personales); lo privado vive en el Proyecto de Claude. Resume qué es el proyecto, cómo está
-armado, cómo se trabaja y qué reglas no se rompen. Actualizado al 08/11/2026 (v0.7.2).
+armado, cómo se trabaja y qué reglas no se rompen. Actualizado al 10/11/2026 (v0.7.3).
 
 ## 1. Qué es
 
@@ -32,7 +32,7 @@ Regla de Pierre: **no se pasa al siguiente módulo sin terminar por completo el 
 | M4 | App del conductor | ✅ v0.5.0, probada en un teléfono real |
 | M5 | App del pasajero completa | ✅ v0.6.0 y v0.6.1 |
 | M6 | Panel de administración | ✅ v0.7.0 y v0.7.1, en producción |
-| M7 | Prueba de campo (piloto) | 🟡 en preparación |
+| M7 | Prueba de campo (piloto) | 🟡 en curso: 1.ª prueba real el 10/11 (2 viajes, D-20 y D-21 → v0.7.3) |
 
 El M7 se hace del 2 al 27/11/2026:
 
@@ -96,7 +96,9 @@ render.yaml         API + panel
 | Datos | GPX propios (BRouter y grabados), Yandex Maps, OpenStreetMap (Overpass y Nominatim) |
 
 **ETA:** `EstimadorDirecto`, que divide la distancia restante sobre el trazado entre la
-velocidad promedio de las últimas 4 posiciones (mínimo 5 km/h). La interfaz `EstimadorETA`
+velocidad de **avance real sobre el trazado en los últimos 10 min** (incluye las paradas;
+mínimo 5 km/h). Con menos de 60 s de historia usa el promedio del GPS de las últimas
+4 posiciones. Desde la 0.7.3 (D-21): con 2 viajes reales el MAE bajó de 12,0 a 4,6 min. La interfaz `EstimadorETA`
 permite enchufar otro método, por ejemplo un LSTM, sin tocar el resto. **El informe del PFC
 ya no habla de LSTM** (ver `claude/estado-actual-proyecto.md` en el Proyecto); la tesis de
 Investigación II todavía lo menciona y está por confirmar con Pierre.
@@ -119,7 +121,7 @@ Investigación II todavía lo menciona y está por confirmar con Pierre.
 - **Commits** con Conventional Commits, en español.
 - **En la nube de Claude:** se puede hacer push, crear PR y fusionar por la API REST: `gh api repos/pnuneza/PFC-rutasur/pulls`, luego `PUT pulls/N/merge` con `merge_method=merge`. GraphQL, tags, releases y logs de Actions están bloqueados.
 - **Fallas de la CI:** se leen como anotaciones, con `gh api .../check-runs/<id>/annotations`. Los scripts de `.github/scripts` publican los errores de Flutter y de Gradle.
-- **Los tags los crea Pierre en su PC.** Hay que darle los comandos con el SHA exacto: `git tag -a vX.Y.Z <sha> -m "…"` y luego `git push origin vX.Y.Z`. Existen de v0.2.0 a v0.7.1 (falta v0.7.2).
+- **Los tags los crea Pierre en su PC.** Hay que darle los comandos con el SHA exacto: `git tag -a vX.Y.Z <sha> -m "…"` y luego `git push origin vX.Y.Z`. Existen de v0.2.0 a v0.7.1; v0.7.2 y v0.7.3 se le pasaron a Pierre (confirmar que las creó).
 - **Al empezar una rama nueva en la nube:** configurar `git config --add remote.origin.fetch "+refs/heads/RAMA:refs/remotes/origin/RAMA"` y luego `git branch -u origin/RAMA`.
 - **Versiones:** se suben juntas en `app/pubspec.yaml`, `backend/pyproject.toml` y `backend/app/__init__.py`.
 - **Defectos:** cada uno se registra en `docs/calidad/registro-defectos.md` (D-NN) con su causa, su corrección y la prueba que lo cubre.

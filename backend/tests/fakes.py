@@ -53,7 +53,7 @@ class FlotaEnMemoria:
         return [u for u in self.unidades if ramal is None or u.ramal == ramal]
 
     def candidatos_llegada(
-        self, codigo_paradero: str, n_velocidades: int
+        self, codigo_paradero: str, n_velocidades: int, ventana_s: int = 600
     ) -> list[CandidatoLlegada]:
         return self.candidatos
 

@@ -14,6 +14,8 @@ def candidato(
     paradero_m: float = 1000,
     velocidades: list[float | None] | None = None,
     antiguedad_s: int = 10,
+    avance_m: float | None = None,
+    ventana_s: float | None = None,
 ) -> CandidatoLlegada:
     return CandidatoLlegada(
         etiqueta="07",
@@ -24,6 +26,8 @@ def candidato(
         distancia_paradero_m=paradero_m,
         ultima_posicion_en=T0 - timedelta(seconds=antiguedad_s),
         velocidades_recientes_kmh=[36.0] if velocidades is None else velocidades,
+        avance_ventana_m=avance_m,
+        duracion_ventana_s=ventana_s,
     )
 
 
@@ -72,3 +76,27 @@ def test_nunca_devuelve_distancias_negativas():
     e = estimador.estimar(candidato(recorrido_m=1200, paradero_m=1000), T0)
     assert e.distancia_m == 0
     assert e.eta_s == 0
+
+
+# --- D-21: velocidad por el avance real de los últimos 10 minutos ----------------
+def test_con_historia_usa_el_avance_real_y_no_el_gps():
+    """La combi está detenida (GPS 0 km/h) pero avanzó 2,5 km en 10 min: 15 km/h."""
+    c = candidato(paradero_m=1000, velocidades=[0.0, 0.0, 0.0, 0.0], avance_m=2500, ventana_s=600)
+    e = estimador.estimar(c, T0)
+    assert e.eta_s == 240  # 1000 m a 15 km/h; con el GPS habría dado 720 s
+
+
+def test_recien_arrancada_sin_un_minuto_de_historia_usa_el_gps():
+    c = candidato(paradero_m=1000, velocidades=[36.0], avance_m=300, ventana_s=30)
+    assert estimador.estimar(c, T0).eta_s == 100  # 36 km/h del GPS, no los 36 de la ventana
+
+
+def test_sin_datos_de_ventana_usa_el_gps():
+    assert estimador.estimar(candidato(paradero_m=1000, velocidades=[36.0]), T0).eta_s == 100
+
+
+@pytest.mark.parametrize("avance_m", [0.0, -40.0])
+def test_si_no_avanzo_en_la_ventana_usa_la_velocidad_minima(avance_m):
+    # Un retroceso aparente (ruido del GPS) no puede dar velocidad negativa
+    c = candidato(paradero_m=1000, avance_m=avance_m, ventana_s=600)
+    assert estimador.estimar(c, T0).eta_s == 720
