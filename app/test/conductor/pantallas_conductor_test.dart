@@ -161,6 +161,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('SIN PERMISOS'), findsOneWidget);
 
+    await tester.ensureVisible(find.byKey(const Key('revisar-permisos')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('revisar-permisos')));
     await tester.pumpAndSettle();
     expect(find.text('Permisos del teléfono'), findsOneWidget);

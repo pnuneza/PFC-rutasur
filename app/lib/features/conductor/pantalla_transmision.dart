@@ -131,8 +131,8 @@ class _PantallaTransmisionState extends State<PantallaTransmision> {
                     Center(
                       child: Container(
                         key: const Key('indicador'),
-                        width: 220,
-                        height: 220,
+                        width: 190,
+                        height: 190,
                         decoration: BoxDecoration(
                           color: fondo,
                           shape: BoxShape.circle,
