@@ -70,7 +70,7 @@ backend/            Python 3.12 + FastAPI
   app/services/     estimador_eta.py (patrón Estrategia), llegadas, emisión, flota, administración
   app/repositories/ SQL con SQLAlchemy (text), un repositorio por área
   app/domain/       modelos, umbrales (RN-xxx), excepciones
-  app/herramientas/ simular_unidad, cuentas, verificar_despliegue, evaluar_eta
+  app/herramientas/ simular_unidad, reproducir_viaje, cuentas, verificar_despliegue, evaluar_eta
   tests/            unit/, integration/, funcionales/, seguridad/, e2e/
 database/
   sql/01..07        esquema completo (extensiones, tipos, tablas, índices, funciones, roles, semilla)
@@ -140,6 +140,12 @@ ruff check . && ruff format --check .
 # Simular una combi contra producción (pide la clave de unidad07)
 python -m app.herramientas.simular_unidad --api https://rutasur-api.onrender.com \
   --usuario unidad07 --ramal MOLLEBAYA --sentido IDA --velocidad 40 --desde 6000
+
+# Repetir un viaje real (demostraciones): exportar una sesión y reproducirla con sus tiempos.
+# El JSON tiene coordenadas exactas de un viaje: va en backend/viajes/ (en .gitignore), nunca al repo
+python -m app.herramientas.reproducir_viaje exportar --sesion <id> --salida viajes/bajada.json
+python -m app.herramientas.reproducir_viaje reproducir --api https://rutasur-api.onrender.com \
+  --usuario unidad07 --viaje viajes/bajada.json --desde-minuto 10   # --rapidez hasta 2
 
 # Medir el error del ETA con los viajes del piloto (DATABASE_URL de rutasur_app)
 python -m app.herramientas.evaluar_eta --desde 2026-11-09 --hasta 2026-11-20 --unidad 07 --csv contraste.csv
