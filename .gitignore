@@ -20,6 +20,9 @@ Thumbs.db
 !.env.example
 *.pem
 
+# ----- Viajes grabados (coordenadas exactas de personas, RN-011) -----
+viajes/
+
 # ----- Flutter / Dart (app/) -----
 .dart_tool/
 .flutter-plugins
