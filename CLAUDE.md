@@ -121,7 +121,7 @@ Investigación II todavía lo menciona y está por confirmar con Pierre.
 - **Commits** con Conventional Commits, en español.
 - **En la nube de Claude:** se puede hacer push, crear PR y fusionar por la API REST: `gh api repos/pnuneza/PFC-rutasur/pulls`, luego `PUT pulls/N/merge` con `merge_method=merge`. GraphQL, tags, releases y logs de Actions están bloqueados.
 - **Fallas de la CI:** se leen como anotaciones, con `gh api .../check-runs/<id>/annotations`. Los scripts de `.github/scripts` publican los errores de Flutter y de Gradle.
-- **Los tags los crea Pierre en su PC.** Hay que darle los comandos con el SHA exacto: `git tag -a vX.Y.Z <sha> -m "…"` y luego `git push origin vX.Y.Z`. Existen de v0.2.0 a v0.7.2; v0.7.3 y v0.7.4 se le pasaron a Pierre (confirmar que las creó).
+- **Los tags los crea Pierre en su PC.** Hay que darle los comandos con el SHA exacto: `git tag -a vX.Y.Z <sha> -m "…"` y luego `git push origin vX.Y.Z`. Existen de v0.2.0 a v0.7.4 (verificado el 14/11/2026).
 - **Al empezar una rama nueva en la nube:** configurar `git config --add remote.origin.fetch "+refs/heads/RAMA:refs/remotes/origin/RAMA"` y luego `git branch -u origin/RAMA`.
 - **Versiones:** se suben juntas en `app/pubspec.yaml`, `backend/pyproject.toml` y `backend/app/__init__.py`.
 - **Defectos:** cada uno se registra en `docs/calidad/registro-defectos.md` (D-NN) con su causa, su corrección y la prueba que lo cubre.
